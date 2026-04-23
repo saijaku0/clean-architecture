@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="TrainBooking.Api/TrainBooking.Api.csproj" Id="65302d45-189a-49a8-bc8e-578524c2ee7a">
+      <BuildDependency Project="TrainBooking.Application/TrainBooking.Application.csproj" />
+      <BuildDependency Project="TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj" />
+    </Project>
+    <Project Path="TrainBooking.Application/TrainBooking.Application.csproj" Id="05142bf9-237b-426a-aac5-ebb206f0306d">
+      <BuildDependency Project="TrainBooking.Domain/TrainBooking.Domain.csproj" />
+    </Project>
+    <Project Path="TrainBooking.Domain/TrainBooking.Domain.csproj" />
+    <Project Path="TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj" Id="6639c210-a541-481d-af7c-ce4fdbd2aaca">
+      <BuildDependency Project="TrainBooking.Application/TrainBooking.Application.csproj" />
+    </Project>
+    <Project Path="TrainBooking.Migrations/TrainBooking.Migrations.csproj" Id="6ba8e9e9-0418-4e28-a394-73b1d0bb015b">
+      <BuildDependency Project="TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="TrainBooking.Tests/TrainBooking.Tests.csproj" Id="107f4d34-d2d8-4bad-a8fd-77660dba15e8">
+      <BuildDependency Project="TrainBooking.Api/TrainBooking.Api.csproj" />
+      <BuildDependency Project="TrainBooking.Application/TrainBooking.Application.csproj" />
+      <BuildDependency Project="TrainBooking.Domain/TrainBooking.Domain.csproj" />
+      <BuildDependency Project="TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj" />
+    </Project>
+  </Folder>
+</Solution>
