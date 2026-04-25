@@ -41,4 +41,14 @@ public class Train : AggregateRoot
         _wagons.Add(newWagon);
         return Result.Success();
     }
+
+    public Result AddSeatToWagon(int wagonNumber, int seatNumber)
+    {
+        Guard.Against.NegativeOrZero(wagonNumber);
+        Guard.Against.NegativeOrZero(seatNumber);
+        Wagon? wagon = _wagons.FirstOrDefault(w => w.Number == wagonNumber);
+        if (wagon is null)
+            return TrainErrors.WagonNotFound(wagonNumber);
+        return wagon.AddSeat(seatNumber);
+    }
 }
