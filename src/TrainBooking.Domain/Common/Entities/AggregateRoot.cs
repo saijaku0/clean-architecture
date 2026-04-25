@@ -1,6 +1,6 @@
-using TrainBooking.Domain.Abstractions.DomainEvents;
+using TrainBooking.Domain.Common.DomainEvents;
 
-namespace TrainBooking.Domain.Abstractions.Entities;
+namespace TrainBooking.Domain.Common.Entities;
 
 /// <summary>
 /// Abstract base class for a domain aggregate that provides a unique identifier and built-in

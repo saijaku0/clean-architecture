@@ -1,4 +1,4 @@
-namespace TrainBooking.Domain.Abstractions.DomainEvents;
+namespace TrainBooking.Domain.Common.DomainEvents;
 
 /// <summary>
 /// Marker interface for domain events.

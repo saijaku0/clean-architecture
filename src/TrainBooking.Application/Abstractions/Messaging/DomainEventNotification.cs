@@ -1,5 +1,5 @@
 using TrainBooking.Application.Abstractions.Messaging.Interfaces;
-using TrainBooking.Domain.Abstractions.DomainEvents;
+using TrainBooking.Domain.Common.DomainEvents;
 
 namespace TrainBooking.Application.Abstractions.Messaging;
 

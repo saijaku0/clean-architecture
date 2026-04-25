@@ -1,4 +1,4 @@
-namespace TrainBooking.Domain.Abstractions.Entities;
+namespace TrainBooking.Domain.Common.Entities;
 
 /// <summary>
 /// Base abstract entity class with a Guid identifier and creation and update timestamps.

@@ -1,4 +1,4 @@
-namespace TrainBooking.Domain.Abstractions.Entities;
+namespace TrainBooking.Domain.Common.Entities;
 
 /// <summary>
 /// Base abstract class for entities with a generic identifier.
