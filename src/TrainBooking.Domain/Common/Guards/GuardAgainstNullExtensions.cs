@@ -59,4 +59,15 @@ public static class GuardAgainstNullExtensions
             throw new ArgumentException($"Parameter '{parameterName}' cannot be null or whitespace.", parameterName);
         return value;
     }
+
+    public static T Null<T>(
+        this IGuard guard,
+        [NotNull] T? value,
+        [CallerArgumentExpression(nameof(value))] string? parameterName = null)
+        where T : class
+    {
+        if (value is null)
+            throw new ArgumentNullException(parameterName, $"Parameter '{parameterName}' cannot be null.");
+        return value;
+    }
 }
