@@ -1,11 +1,16 @@
 using TrainBooking.Domain.Common.Entities;
 using TrainBooking.Domain.Common.Guards;
+using TrainBooking.Domain.Common.Results;
+using TrainBooking.Domain.Trains.Errors;
 using TrainBooking.Domain.Trains.ValueObjects;
 
 namespace TrainBooking.Domain.Trains;
 
 public class Wagon : EntityBase
 {
+    private readonly List<Seat> _seats = [];
+    public IReadOnlyCollection<Seat> Seats => _seats.AsReadOnly();
+
     public Guid TrainId { get; private init; }
 
     public int Number { get; private init; }
@@ -38,6 +43,16 @@ public class Wagon : EntityBase
             trainId,
             wagonNumber,
             wagonClass);
+    }
+
+    internal Result AddSeat(int seatNumber)
+    {
+        Guard.Against.NegativeOrZero(seatNumber);
+        if (_seats.Any(s => s.Number == seatNumber))
+            return TrainErrors.DuplicateSeatNumber(seatNumber);
+        var newSeat = Seat.Create(Id, seatNumber);
+        _seats.Add(newSeat);
+        return Result.Success();
     }
 
     /// <remarks>
