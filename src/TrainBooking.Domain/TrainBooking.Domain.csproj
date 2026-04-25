@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Users\" />
+    <Folder Include="Trips\" />
+    <Folder Include="TripSeats\" />
+    <Folder Include="Reservations\" />
+  </ItemGroup>
+
 </Project>
