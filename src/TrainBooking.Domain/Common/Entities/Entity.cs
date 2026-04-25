@@ -7,7 +7,7 @@ namespace TrainBooking.Domain.Common.Entities;
 public abstract class Entity<TId> : IEquatable<Entity<TId>>
      where TId : notnull
 {
-    public TId Id { get; protected init; }
+    public TId Id { get; protected init; } = default!;
 
     protected Entity(TId id)
     {
