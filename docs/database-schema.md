@@ -7,7 +7,7 @@ The domain is split into two layers:
 - **Physical layer** (`Trains`, `Wagons`, `Seats`) — long-lived rolling stock. Rarely changes.
 - **Logical layer** (`Trips`, `TripSeats`, `Reservations`, `ReservationSeats`) — per-trip availability and bookings. High write volume.
 
-User identity is delegated to Auth0; the local `User` table is a thin cache.
+User identity is delegated to Auth0; the local `User` table is a thin cache, keyed by an internal Guid with a unique `Auth0Sub` column.
 
 ## Entity-relationship diagram
 
@@ -24,7 +24,8 @@ erDiagram
   TripSeats ||--o{ ReservationSeats : "booked through"
 
   User {
-    nvarchar Auth0Sub PK
+    uniqueidentifier Id PK
+    nvarchar Auth0Sub UK
     nvarchar Email
     nvarchar FullName
     datetime2 CreatedAt
@@ -71,7 +72,7 @@ erDiagram
   Reservations {
     uniqueidentifier ReservationId PK
     uniqueidentifier TripId FK
-    nvarchar UserId FK
+    uniqueidentifier UserId FK
     nvarchar Status
     decimal TotalPrice
     datetime2 CreatedAt
@@ -93,10 +94,13 @@ erDiagram
 
 Cached identity information from Auth0. Auth0 remains the source of truth for authentication, email, and profile fields; this table exists so reservation reads don't need to hit the Auth0 Management API on every request.
 
-- `Auth0Sub` — primary key, the Auth0 `sub` claim (e.g. `auth0|6534abc123`). Strings rather than Guids because that's what Auth0 issues.
+- `Id` — primary key, internal Guid generated on first authenticated request. Used as the foreign key target from `Reservations.UserId` and any other domain reference to a user.
+- `Auth0Sub` — the Auth0 `sub` claim (e.g. `auth0|6534abc123`). Has a unique index so the same Auth0 user cannot be inserted twice. Used as the lookup key when middleware translates a JWT into our internal `User.Id`.
 - `LastSyncedAt` — timestamp of the last refresh from Auth0. Enables a periodic sync job to detect stale entries.
 
-Populated lazily by middleware on the first authenticated request per user (see `README.md` → Auth0 setup).
+Populated lazily by middleware on the first authenticated request per user (see `README.md` → Auth0 setup). The flow is: read `sub` from JWT → lookup `User` by `Auth0Sub` → if missing, insert a new `User` with a fresh Guid `Id` and the profile claims.
+
+Decoupling our internal Guid `Id` from the external `Auth0Sub` means swapping the identity provider later (e.g. Keycloak) only requires renaming and re-syncing one column, not migrating every foreign key in the database.
 
 ### Trains
 
@@ -135,7 +139,7 @@ See also: `docs/adr/0001-trip-seats-denormalization.md` for why this is a materi
 
 A passenger's booking on a trip. A reservation may contain 1–4 trip seats.
 
-- `UserId` — FK to `User.Auth0Sub`.
+- `UserId` — FK to `User.Id` (Guid). The Auth0 `sub` is never stored here directly; the lookup happens through the `User` cache.
 - `Status` — `Pending`, `Confirmed`, `Cancelled`, `Expired`.
 - `ExpiresAt` — set at creation to `CreatedAt + 15 minutes`. The background job queries for `Status = 'Pending' AND ExpiresAt < SYSUTCDATETIME()` to expire stale reservations.
 - `ConfirmedAt` — set when the reservation transitions to `Confirmed`. Nullable.
@@ -155,6 +159,7 @@ Indexes beyond primary keys and uniqueness constraints:
 
 | Index | Purpose |
 |---|---|
+| `IX_User_Auth0Sub_Unique` | Lookup of internal `User.Id` by Auth0 `sub` claim on every authenticated request. Unique to prevent duplicate cache entries for the same Auth0 user. |
 | `IX_TripSeats_TripId_Status` | Hot-path for `GET /trips/{id}/seats` and target of the pessimistic `SELECT ... WITH (UPDLOCK)` during reservation. |
 | `IX_Reservations_UserId_TripId` | "My reservations on this trip" queries, plus the 4-seat-per-trip limit check. |
 | `IX_Reservations_Status_ExpiresAt` (filtered: `WHERE Status = 'Pending'`) | Background job that expires pending reservations. Filtered to keep the index small. |
