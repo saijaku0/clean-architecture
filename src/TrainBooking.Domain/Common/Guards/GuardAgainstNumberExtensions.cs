@@ -12,23 +12,25 @@ namespace TrainBooking.Domain.Common.Guards;
 public static class GuardAgainstNumberExtensions
 {
     /// <summary>
-    /// Ensures that the provided integer value is greater than zero.
+    /// Ensures that the provided numeric value is greater than zero.
     /// </summary>
-    /// <param name="guardClause">The guard instance used as an entry point for validation.</param>
-    /// <param name="value">The integer value to validate.</param>
+    /// <typeparam name="T">The type of the numeric value.</typeparam>
+    /// <param name="guard">The guard instance used as an entry point for validation.</param>
+    /// <param name="value">The numeric value to validate.</param>
     /// <param name="parameterName">
     /// The name of the parameter being validated. Automatically populated via caller information.
     /// </param>
-    /// <returns>The validated integer value if it is greater than zero.</returns>
+    /// <returns>The validated numeric value if it is greater than zero.</returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when the value is less than or equal to zero.
     /// </exception>
-    public static int NegativeOrZero(
-        this IGuard guardClause,
-        int value,
+    public static T NegativeOrZero<T>(
+        this IGuard guard,
+        T value,
         [CallerArgumentExpression(nameof(value))] string? parameterName = null)
+        where T : struct, IComparable<T>
     {
-        if (value <= 0)
+        if (value.CompareTo(default) <= 0)
         {
             throw new ArgumentOutOfRangeException(parameterName, value, $"{parameterName} must be greater than zero.");
         }
