@@ -8,47 +8,58 @@ The project is a good fit for studying design patterns, CQRS, domain events, con
 
 ## 🎯 About the project and business rules (Core Domain)
 
-The problem domain is focused on the reservation process. The system has three main Aggregates:
+The problem domain is modeled in two layers.
 
-* **Trip** — a specific train run (route, date, departure time, list of cars).
-* **Seat** — a seat in a car (number, class, status: `Available` / `Reserved` / `Sold`).
-* **Reservation** — the booking entity (passenger linked to seats).
+**Physical layer** — long-lived rolling stock that rarely changes:
+
+* **Train** — a physical trainset with a name and model; reused across many trips.
+* **Wagon** — a car of a train, with a class (`FirstClass` / `SecondClass` / `Bistro`).
+* **Seat** — a physical seat in a wagon, identified by its number within the wagon.
+
+**Logical / booking layer** — per-trip availability and bookings:
+
+* **Trip** — a specific run of a train on a route at a given date and time.
+* **TripSeat** — the availability and price of a specific seat on a specific trip (status: `Available` / `Reserved` / `Sold`).
+* **Reservation** — a booking entity linking a passenger to one or more trip seats.
+
+Full ERD and column-level details live in [`docs/database-schema.md`](./docs/database-schema.md).
 
 **Key business rules:**
 
-* **Idempotency and concurrency:** A seat cannot be booked if its status is already `Reserved` or `Sold`. Implementation details are covered in the *🔒 Concurrency strategy* section.
-* **Reservation TTL:** A reservation lives for exactly 15 minutes. If its status has not moved to `Confirmed`, it is cancelled automatically by a background job, and the seats' status flips back to `Available` via a Domain Event.
+* **Idempotency and concurrency:** A trip seat cannot be booked if its status is already `Reserved` or `Sold`. Implementation details are covered in the [🔒 Concurrency strategy](#-concurrency-strategy) section.
+* **Reservation TTL:** A reservation lives for exactly 15 minutes. If its status has not moved to `Confirmed`, it is cancelled automatically by a background job, and the status of its trip seats flips back to `Available` via a domain event.
 * **Limits:** A single passenger can book at most 4 seats on one trip.
 * **Time validation:** Seats cannot be booked on a trip that has already departed.
-* **Pricing:** The seat class (the `SeatClass` value object) encapsulates the business logic for final price calculation.
+* **Pricing:** The seat class (the `SeatClass` value object) encapsulates the business logic for final price calculation. Class is attached at the wagon level and inherited by seats.
 
 ## 🛠 Tech stack and patterns
 
 ### Architecture
 * **Clean Architecture:** Strict separation into layers. The Domain has no external dependencies.
 * **CQRS via MediatR:** Commands are isolated from queries. Repetitive infrastructure plumbing (UnitOfWork, uniform handling of domain exceptions) is extracted into base classes `CommandHandler<T>` and `QueryHandler<T>`, so concrete handlers contain only pure business logic. An alternative approach using Pipeline Behaviors is discussed in the backlog.
-* **Domain Events:** Events (such as `SeatReservedEvent`, `ReservationExpiredEvent`) are dispatched by overriding `SaveChangesAsync` in EF Core, with an adapter to `MediatR`.
+* **Domain Events:** Events (such as `TripSeatReservedDomainEvent`, `ReservationExpiredDomainEvent`) are dispatched by overriding `SaveChangesAsync` in EF Core, with an adapter to `MediatR`.
 * **Result pattern:** No exceptions for business logic. The domain uses `Result<T>`, which is mapped to HTTP codes at the API layer through extension methods.
 
 ### Infrastructure
 * **Database:** Microsoft SQL Server 2022, with migrations extracted into a separate console project.
 * **Caching:** Redis for frequent queries (for example, `GetTripSeatsQuery`). The cache is invalidated by domain events when seat state changes.
 * **Background jobs:** An `IHostedService` that automatically checks for expired reservations every minute.
-* **Authentication:** Auth0 (cloud-hosted JWT validation via JWKS).
+* **Authentication:** Auth0 (cloud-hosted JWT validation via JWKS). A thin local `User` table caches `email` and `full name`, keyed by an internal Guid `Id` with a unique `Auth0Sub` column. Populated lazily by middleware on the first authenticated request. See [🔑 Auth0 setup](#-auth0-setup).
 * **Logging:** Serilog (structured logging).
 
 ## 🔒 Concurrency strategy
 
-Seat booking is the central contention point in the system: multiple users click on the same seats of a popular trip at the same time. For that load profile, we use **pessimistic row-level locking** in SQL Server:
+Seat booking is the central contention point in the system: multiple users click on the same seats of a popular trip at the same time. For that load profile, we use **pessimistic row-level locking** in SQL Server on the `TripSeats` table:
 
 * **Lock hints:** `WITH (UPDLOCK, ROWLOCK, HOLDLOCK)` on the `SELECT` inside the reservation transaction.
     * `UPDLOCK` — an intent-update lock: it blocks anyone else who wants to modify the row, while still allowing plain SELECTs.
     * `ROWLOCK` — forces row-level locking instead of page/table level.
     * `HOLDLOCK` — holds the lock until the transaction ends (the equivalent of SERIALIZABLE range locks, but scoped to the selected rows).
 * **Isolation level:** `ReadCommitted` (the default) together with the hints above. We do not raise the global isolation level to SERIALIZABLE, to avoid blocking anything unnecessary.
-* **Deterministic lock order:** seats are locked with `ORDER BY SeatId` — this is critical to prevent deadlocks when two requests compete for overlapping sets of seats (recall the 4-seat limit per reservation).
+* **Deterministic lock order:** trip seats are locked with `ORDER BY TripSeatId` — this is critical to prevent deadlocks when two requests compete for overlapping sets of seats (recall the 4-seat limit per reservation).
 * **Deadlock policy:** we catch SQL Server error 1205 and retry up to 3 times with exponential backoff via Polly. If the conflict persists, the client gets a 409 Conflict.
 * **Lock timeout:** `SET LOCK_TIMEOUT 3000` at the command level, so a connection is not held indefinitely.
+* **Supporting index:** `IX_TripSeats_TripId_Status` backs both the hot-path availability query (`GET /trips/{id}/seats`) and the locked `SELECT` inside the reservation command.
 
 This approach gives strict correctness under the moderate contention expected at the level of individual trips. Horizontal scaling is possible through sharding by `TripId` if the need arises.
 
@@ -58,12 +69,15 @@ The project is split into logical modules to keep coupling loose:
 
 ```text
 📦 TrainBooking.sln
- ┣ 📂 TrainBooking.Domain         # Entities, Value Objects, IDomainEvent, Domain Exceptions/Results
- ┣ 📂 TrainBooking.Application    # Commands, Queries, Handlers, FluentValidators, IRepository interfaces
- ┣ 📂 TrainBooking.Infrastructure # EF Core DataContext, Redis integration, MediatR adapters, Serilog
- ┣ 📂 TrainBooking.Api            # Controllers, Global Exception Middleware, Result -> HTTP extensions
- ┣ 📂 TrainBooking.Migrations     # EF Core Migrations runner (Console App)
- ┗ 📂 TrainBooking.Tests          # Architecture Tests (NetArchTest), Unit Tests, Integration Tests (Testcontainers)
+ ┣ 📂 src
+ ┃  ┣ 📂 TrainBooking.Domain         # Entities, Value Objects, IDomainEvent, Domain Exceptions/Results
+ ┃  ┣ 📂 TrainBooking.Application    # Commands, Queries, Handlers, FluentValidators, IRepository interfaces
+ ┃  ┣ 📂 TrainBooking.Infrastructure # EF Core DataContext, Redis integration, MediatR adapters, Serilog
+ ┃  ┣ 📂 TrainBooking.Api            # Endpoints, Global Exception Handler, Result -> HTTP extensions
+ ┃  ┗ 📂 TrainBooking.Migrations     # EF Core Migrations runner (Console App)
+ ┣ 📂 tests
+ ┃  ┗ 📂 TrainBooking.Tests          # Architecture Tests (NetArchTest), Unit Tests, Integration Tests (Testcontainers)
+ ┗ 📂 docs                           # ERD, ADRs, supporting documentation
 ```
 
 ## 🚧 Project scope (MVP boundaries)
@@ -95,8 +109,8 @@ The project is fully containerized. Infrastructure is brought up via Docker Comp
 
 **Steps**
 1. Clone the repository.
-2. Configure Auth0 (see *🔑 Auth0 setup*).
-3. In the root directory, run: `docker-compose up -d` (this starts SQL Server and Redis).
+2. Configure Auth0 (see [🔑 Auth0 setup](#-auth0-setup)).
+3. In the root directory, run: `docker compose up -d` (this starts SQL Server and Redis).
 4. Run the `TrainBooking.Migrations` project to apply the database schema.
 5. Run `TrainBooking.Api`. The Scalar UI will be available at `https://localhost:5001/scalar`.
 
@@ -112,8 +126,11 @@ The project is fully containerized. Infrastructure is brought up via Docker Comp
      "Audience": "https://train-booking-api"
    }
    ```
+
 * The JWT Bearer pipeline pulls the JWKS automatically from `https://{Domain}/.well-known/openid-configuration` — signature validation does not require manual key setup.
 * Scopes from the token are mapped to policies via `[Authorize(Policy = "reservations:write")]`.
+
+**Local user cache.** Auth0 is the source of truth for identity. We keep a thin `User` table keyed by an internal Guid `Id` with a unique `Auth0Sub` column, caching `email` and `full name` so reservation reads don't need to call the Auth0 Management API on every request. On the first authenticated request, an `EnsureUserCache` middleware looks up the user by the `sub` claim from the JWT, inserts a new row with a fresh Guid if missing, and exposes the resulting internal `User.Id` to handlers. A `LastSyncedAt` column allows periodic refresh if profile data drifts. Decoupling the internal `Id` from `Auth0Sub` means changing the identity provider later does not require migrating every foreign key.
 
 ## 🧪 Testing
 
@@ -127,10 +144,12 @@ The project is fully containerized. Infrastructure is brought up via Docker Comp
 
 This section honestly documents the MVP's compromises. Every item here is a deliberate decision, not an oversight.
 
-1.  **Domain events are dispatched inside SaveChangesAsync, without an Outbox.** If a handler fails after the commit, the event is lost (for example, Redis invalidation does not happen → stale cache until the TTL expires). For production-grade reliability, moving to a Transactional Outbox + a dedicated worker is on the backlog.
+1.  **Domain events are dispatched inside `SaveChangesAsync`, without an Outbox.** If a handler fails after the commit, the event is lost (for example, Redis invalidation does not happen → stale cache until the TTL expires). For production-grade reliability, moving to a Transactional Outbox + a dedicated worker is on the backlog.
 2.  **The Redis cache is eventually consistent.** The baseline defense is a short TTL (60 sec) as a fallback in case event-driven invalidation does not fire.
-3.  **Idempotency for POST /reservations via an Idempotency-Key header** (+ Redis with a 24-hour TTL) — not in the MVP, but on the backlog. Without it, client retries on a network timeout will produce duplicate reservations.
+3.  **Idempotency for `POST /reservations` via an `Idempotency-Key` header** (+ Redis with a 24-hour TTL) — not in the MVP, but on the backlog. Without it, client retries on a network timeout will produce duplicate reservations.
 4.  **Base handler classes vs. Pipeline Behaviors.** The current approach with `CommandHandler<T>` / `QueryHandler<T>` reduces boilerplate through inheritance. The alternative — a set of `IPipelineBehavior<TRequest, TResponse>` implementations (Logging / Validation / Transaction) — is the more idiomatic MediatR path and gives better composition of cross-cutting behavior. A likely refactor once the domain stabilizes.
 5.  **The retry policy is limited to deadlocks (error 1205).** Other transient SQL Server failures are not retried automatically — for production this should be extended via Polly combined with the `Microsoft.Data.SqlClient` transient error detector.
+6.  **`TripSeats` are generated per trip (denormalization).** Creating a new `Trip` materializes a `TripSeat` row for every seat of the linked train. This simplifies locking and availability queries but duplicates rows across trips. For a longer booking horizon (years of trips across many routes), revisiting with table partitioning or a lighter-weight availability model is the next step.
+7.  **Local `User` cache is lazy and eventually consistent with Auth0.** Profile changes made in Auth0 (email, name) don't propagate to our DB until the next refresh window. Acceptable for MVP; a webhook-driven sync is the next step if it matters.
 
 This is a learning project that evolves iteratively. Its goal is to reinforce the patterns of Clean Architecture, DDD, CQRS, domain events, and concurrent access in SQL Server.
