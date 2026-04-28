@@ -15,6 +15,10 @@ ADRs are immutable once accepted. To change a decision, write a new ADR that **s
 | # | Title | Status |
 |---|---|---|
 | [0001](./0001-trip-seats-denormalization.md) | Materialize TripSeats per trip | Accepted |
+| [0002](./0002-user-internal-guid-with-auth0-sub-unique.md) | User cache keyed by internal Guid `Id` with unique `Auth0Sub` | Accepted |
+| [0003](./0003-time-provider-for-testable-time.md) | Use `TimeProvider` for time-dependent domain logic | Accepted |
+| [0004](./0004-domain-events-without-pii.md) | Domain events carry identifiers only, never PII or rich payload | Accepted |
+| [0005](./0005-trip-seat-as-separate-aggregate.md) | `TripSeat` is a separate aggregate root, not an inner entity of `Trip` | Accepted |
 
 ## Writing a new ADR
 

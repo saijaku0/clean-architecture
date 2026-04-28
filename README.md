@@ -12,33 +12,39 @@ The problem domain is modeled in two layers.
 
 **Physical layer** — long-lived rolling stock that rarely changes:
 
-* **Train** — a physical trainset with a name and model; reused across many trips.
-* **Wagon** — a car of a train, with a class (`FirstClass` / `SecondClass` / `Bistro`).
-* **Seat** — a physical seat in a wagon, identified by its number within the wagon.
+* **Train** — a physical trainset; reused across many trips. Aggregate root.
+* **Wagon** — a car of a train, with a class (`FirstClass` / `SecondClass` / `Bistro`). Internal entity of the Train aggregate.
+* **Seat** — a physical seat in a wagon, identified by its number within the wagon. Internal entity of the Train aggregate.
 
 **Logical / booking layer** — per-trip availability and bookings:
 
-* **Trip** — a specific run of a train on a route at a given date and time.
-* **TripSeat** — the availability and price of a specific seat on a specific trip (status: `Available` / `Reserved` / `Sold`).
-* **Reservation** — a booking entity linking a passenger to one or more trip seats.
+* **Trip** — a specific run of a train on a route at a given date and time. Aggregate root.
+* **TripSeat** — the availability and price of a specific seat on a specific trip (status: `Available` / `Reserved` / `Sold`). A separate aggregate root, isolated from `Trip` so that pessimistic locking can target it independently — see [ADR-0005](./docs/adr/0005-trip-seat-as-separate-aggregate.md).
+* **Reservation** — a booking entity linking a passenger to one to four trip seats. Aggregate root.
+* **ReservationSeat** — internal entity of a Reservation, with a `PriceSnapshot` field that fixes the price at booking time.
+
+**Identity:**
+
+* **User** — a thin local cache of Auth0 identity (email, full name). Keyed by an internal Guid `Id` with a unique `Auth0Sub` column. See [ADR-0002](./docs/adr/0002-user-internal-guid-with-auth0-sub-unique.md).
 
 Full ERD and column-level details live in [`docs/database-schema.md`](./docs/database-schema.md).
 
-**Key business rules:**
+**Key business rules enforced in the domain:**
 
 * **Idempotency and concurrency:** A trip seat cannot be booked if its status is already `Reserved` or `Sold`. Implementation details are covered in the [🔒 Concurrency strategy](#-concurrency-strategy) section.
 * **Reservation TTL:** A reservation lives for exactly 15 minutes. If its status has not moved to `Confirmed`, it is cancelled automatically by a background job, and the status of its trip seats flips back to `Available` via a domain event.
-* **Limits:** A single passenger can book at most 4 seats on one trip.
-* **Time validation:** Seats cannot be booked on a trip that has already departed.
-* **Pricing:** The seat class (the `SeatClass` value object) encapsulates the business logic for final price calculation. Class is attached at the wagon level and inherited by seats.
+* **Limits:** A reservation must include between 1 and 4 trip seats.
+* **Time validation:** A reservation cannot be created for a trip that has already departed. A reservation cannot be confirmed after its 15-minute window has expired (race-safety against the expiry job). A reservation cannot be cancelled less than 24 hours before the trip's departure.
+* **Pricing:** The seat class (the `SeatClass` value object) encapsulates the business logic for final price calculation. Class is attached at the wagon level and inherited by seats. The `Reservation.TotalPrice` and `ReservationSeat.PriceSnapshot` are denormalized at booking time so later price changes don't retroactively rewrite existing bookings.
 
 ## 🛠 Tech stack and patterns
 
 ### Architecture
-* **Clean Architecture:** Strict separation into layers. The Domain has no external dependencies.
+* **Clean Architecture:** Strict separation into layers. The Domain has no external dependencies — no MediatR, no EF Core, no FluentValidation, only the .NET BCL.
 * **CQRS via MediatR:** Commands are isolated from queries. Repetitive infrastructure plumbing (UnitOfWork, uniform handling of domain exceptions) is extracted into base classes `CommandHandler<T>` and `QueryHandler<T>`, so concrete handlers contain only pure business logic. An alternative approach using Pipeline Behaviors is discussed in the backlog.
-* **Domain Events:** Events (such as `TripSeatReservedDomainEvent`, `ReservationExpiredDomainEvent`) are dispatched by overriding `SaveChangesAsync` in EF Core, with an adapter to `MediatR`.
-* **Result pattern:** No exceptions for business logic. The domain uses `Result<T>`, which is mapped to HTTP codes at the API layer through extension methods.
+* **Domain Events:** `IDomainEvent` lives in Domain as a marker interface; `DomainEventNotification<T>` in Application wraps it for MediatR. Events are dispatched by overriding `SaveChangesAsync` in EF Core (see [ADR-0004](./docs/adr/0004-domain-events-without-pii.md) for the no-PII rule).
+* **Result pattern:** No exceptions for business logic. The domain uses `Result<T>` and `Error` (with `ErrorType` for HTTP-status mapping at the API layer). Exceptions remain only for programmatic-contract violations (null parameters, invalid Guids), thrown by `Guard.Against.*` clauses.
+* **`TimeProvider` for time-dependent logic:** Aggregates that reason about time (`Trip`, `Reservation`) accept `TimeProvider` as a parameter on factory methods and operations. Tests substitute `FakeTimeProvider` from `Microsoft.Extensions.TimeProvider.Testing`. See [ADR-0003](./docs/adr/0003-time-provider-for-testable-time.md).
 
 ### Infrastructure
 * **Database:** Microsoft SQL Server 2022, with migrations extracted into a separate console project.
@@ -70,7 +76,7 @@ The project is split into logical modules to keep coupling loose:
 ```text
 📦 TrainBooking.sln
  ┣ 📂 src
- ┃  ┣ 📂 TrainBooking.Domain         # Entities, Value Objects, IDomainEvent, Domain Exceptions/Results
+ ┃  ┣ 📂 TrainBooking.Domain         # Entities, Value Objects, IDomainEvent, Domain Errors/Results, Guard clauses
  ┃  ┣ 📂 TrainBooking.Application    # Commands, Queries, Handlers, FluentValidators, IRepository interfaces
  ┃  ┣ 📂 TrainBooking.Infrastructure # EF Core DataContext, Redis integration, MediatR adapters, Serilog
  ┃  ┣ 📂 TrainBooking.Api            # Endpoints, Global Exception Handler, Result -> HTTP extensions
@@ -134,8 +140,8 @@ The project is fully containerized. Infrastructure is brought up via Docker Comp
 
 ## 🧪 Testing
 
-* **Unit tests:** pure tests of the domain and handlers, with no infrastructure. `xUnit` + `Shouldly`.
-* **Architecture tests:** `NetArchTest` — verifies that Domain does not reference Infrastructure, that every handler inherits from the base class, and so on.
+* **Unit tests:** pure tests of the domain and handlers, with no infrastructure. `xUnit` + `Shouldly`. Tests substitute `FakeTimeProvider` from `Microsoft.Extensions.TimeProvider.Testing` for any time-dependent logic.
+* **Architecture tests:** `NetArchTest` — verifies that Domain does not reference Infrastructure, that every handler inherits from the base class, that domain events implement `IDomainEvent`, and so on.
 * **Integration tests:** `WebApplicationFactory` + `Testcontainers` (`Testcontainers.MsSql`, `Testcontainers.Redis`) — a real SQL Server and Redis are spun up in Docker on every run. No in-memory database substitutes.
 
 *Before submitting a Pull Request, please make sure all tests (Unit, Integration, Architecture) pass.*
@@ -149,7 +155,9 @@ This section honestly documents the MVP's compromises. Every item here is a deli
 3.  **Idempotency for `POST /reservations` via an `Idempotency-Key` header** (+ Redis with a 24-hour TTL) — not in the MVP, but on the backlog. Without it, client retries on a network timeout will produce duplicate reservations.
 4.  **Base handler classes vs. Pipeline Behaviors.** The current approach with `CommandHandler<T>` / `QueryHandler<T>` reduces boilerplate through inheritance. The alternative — a set of `IPipelineBehavior<TRequest, TResponse>` implementations (Logging / Validation / Transaction) — is the more idiomatic MediatR path and gives better composition of cross-cutting behavior. A likely refactor once the domain stabilizes.
 5.  **The retry policy is limited to deadlocks (error 1205).** Other transient SQL Server failures are not retried automatically — for production this should be extended via Polly combined with the `Microsoft.Data.SqlClient` transient error detector.
-6.  **`TripSeats` are generated per trip (denormalization).** Creating a new `Trip` materializes a `TripSeat` row for every seat of the linked train. This simplifies locking and availability queries but duplicates rows across trips. For a longer booking horizon (years of trips across many routes), revisiting with table partitioning or a lighter-weight availability model is the next step.
+6.  **`TripSeats` are generated per trip (denormalization).** Creating a new `Trip` materializes a `TripSeat` row for every seat of the linked train. This simplifies locking and availability queries but duplicates rows across trips. For a longer booking horizon (years of trips across many routes), revisiting with table partitioning or a lighter-weight availability model is the next step. See [ADR-0001](./docs/adr/0001-trip-seats-denormalization.md).
 7.  **Local `User` cache is lazy and eventually consistent with Auth0.** Profile changes made in Auth0 (email, name) don't propagate to our DB until the next refresh window. Acceptable for MVP; a webhook-driven sync is the next step if it matters.
+8.  **`User` and `EntityBase` audit fields use `DateTime.UtcNow` directly** instead of `TimeProvider`. Doesn't affect correctness — only test determinism. Migration to TimeProvider is on the backlog.
+9.  **No strongly-typed IDs (yet).** All identifiers are raw `Guid`. The generic `Entity<TId>` keeps the door open for migration later via a source generator like `StronglyTypedId`. See the trade-off discussion in the foundation PR.
 
 This is a learning project that evolves iteratively. Its goal is to reinforce the patterns of Clean Architecture, DDD, CQRS, domain events, and concurrent access in SQL Server.
