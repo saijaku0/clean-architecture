@@ -32,9 +32,22 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         // Configure properties of aggregates. Traverse the aggregate tree, ignore DomainEvents and configure Id as ValueGeneratedNever
         foreach (Type aggregateType in aggregateTypes)
         {
-            EntityTypeBuilder aggregateTypeBuilder = modelBuilder.Entity(aggregateType);
-            aggregateTypeBuilder.Ignore(nameof(AggregateRoot.DomainEvents));
-            aggregateTypeBuilder.Property(nameof(AggregateRoot.Id)).ValueGeneratedNever();
+            modelBuilder.Entity(aggregateType).Ignore(nameof(AggregateRoot.DomainEvents));
+        }
+
+        // Retrieve all entity base types from the model
+        IEnumerable<Type> entityBaseTypes = modelBuilder.Model
+            .GetEntityTypes()
+            .Select(e => e.ClrType)
+            .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(EntityBase)));
+
+        // Configure common properties for all entities derived from EntityBase
+        foreach (Type entityType in entityBaseTypes)
+        {
+            EntityTypeBuilder b = modelBuilder.Entity(entityType);
+            b.Property(nameof(EntityBase.Id)).ValueGeneratedNever();
+            b.Property(nameof(EntityBase.CreatedAt)).IsRequired();
+            b.Property(nameof(EntityBase.UpdatedAt)).IsRequired(false);
         }
     }
 }
