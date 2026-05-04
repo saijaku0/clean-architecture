@@ -7,9 +7,9 @@ namespace TrainBooking.Infrastructure.Persistence.Repositories;
 internal sealed class TripRepository(AppDbContext dbContext) : ITripRepository
 {
     public async Task<Trip?> GetByIdAsync(
-        Guid Id,
+        Guid id,
         CancellationToken ct = default) =>
-            await dbContext.Trips.FirstOrDefaultAsync(t => t.Id == Id, ct);
+            await dbContext.Trips.FirstOrDefaultAsync(t => t.Id == id, ct);
 
     public async Task AddAsync(
         Trip trip,
