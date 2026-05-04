@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TrainBooking.Domain\TrainBooking.Domain.csproj" />
+      <ProjectReference Include="..\TrainBooking.Application\TrainBooking.Application.csproj" />
   </ItemGroup>
 
 </Project>
