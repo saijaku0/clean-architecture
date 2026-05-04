@@ -20,7 +20,7 @@ internal sealed class ReservationRepository(AppDbContext dbContext) : IReservati
             await dbContext.Reservations
                 .Where(r => r.UserId == userId
                     && r.TripId == tripId
-                    && ActiveStatuses.Contains(r.Status))
+                    && _activeStatuses.Contains(r.Status))
                 .CountAsync(ct);
     public async Task<IReadOnlyList<Reservation>> GetExpiredPendingAsync(
         DateTime now,
@@ -33,6 +33,6 @@ internal sealed class ReservationRepository(AppDbContext dbContext) : IReservati
     public async Task AddAsync(Reservation reservation, CancellationToken ct = default) =>
         await dbContext.Reservations.AddAsync(reservation, ct);
 
-    private static readonly ReservationStatus[] ActiveStatuses =
+    private static readonly ReservationStatus[] _activeStatuses =
         [ReservationStatus.Pending, ReservationStatus.Confirmed];
 }
