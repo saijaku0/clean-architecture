@@ -21,6 +21,10 @@ public static class InfrastructureServiceExtensions
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ITrainRepository, TrainRepository>();
+        services.AddScoped<ITripRepository, TripRepository>();
+        services.AddScoped<ITripSeatRepository, TripSeatRepository>();
+        services.AddScoped<IReservationRepository, ReservationRepository>();
 
         return services;
     }
