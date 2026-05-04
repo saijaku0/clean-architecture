@@ -11,6 +11,13 @@ internal sealed class TripSeatRepository(AppDbContext appDbContext) : ITripSeatR
         CancellationToken ct = default) =>
             await appDbContext.TripSeats.Where(t => t.TripId == tripId).ToListAsync(ct);
 
+    /// <summary>
+    /// Acquires update locks on the specified TripSeats for the duration of the current transaction.
+    /// </summary>
+    /// <remarks>
+    /// Must be called inside an active database transaction (BeginTransactionAsync).
+    /// Without a transaction, locks are released immediately after the SELECT completes.
+    /// </remarks>
     public async Task<IReadOnlyList<TripSeat>> LockByIdsAsync(
         IReadOnlyCollection<Guid> tripSeatIds,
         CancellationToken ct = default)
