@@ -13,8 +13,19 @@ internal sealed class TripSeatRepository(AppDbContext appDbContext) : ITripSeatR
 
     public async Task<IReadOnlyList<TripSeat>> LockByIdsAsync(
         IReadOnlyCollection<Guid> tripSeatIds,
-        CancellationToken ct = default) =>
-            await appDbContext.TripSeats.Where(ts => tripSeatIds.Contains(ts.SeatId)).ToListAsync(ct);
+        CancellationToken ct = default)
+    {
+        Guid[] orderedIds = tripSeatIds.OrderBy(id => id).ToArray();
+
+        string sql = $@"
+            SELECT * FROM TripSeats WITH (UPDLOCK, ROWLOCK, HOLDLOCK)
+            WHERE Id IN ({string.Join(",", orderedIds.Select((_, i) => $"{{{i}}}"))})
+            ORDER BY Id";
+
+        return await appDbContext.TripSeats
+            .FromSqlRaw(sql, [.. orderedIds.Cast<object>()])
+            .ToListAsync(ct);
+    }
 
     public async Task AddRangeAsync(
         IEnumerable<TripSeat> tripSeats,
