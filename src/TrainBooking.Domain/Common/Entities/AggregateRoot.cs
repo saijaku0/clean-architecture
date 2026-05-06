@@ -25,6 +25,6 @@ public abstract class AggregateRoot(Guid id) : EntityBase(id)
         ArgumentNullException.ThrowIfNull(domainEvent);
         _domainEvents.Add(domainEvent);
     }
-    protected void RemoveDomainEvent() => _domainEvents.Clear();
+    public void ClearDomainEvents() => _domainEvents.Clear();
 }
 
