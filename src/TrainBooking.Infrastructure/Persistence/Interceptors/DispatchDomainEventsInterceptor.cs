@@ -1,4 +1,3 @@
-using System.Reflection;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -11,40 +10,6 @@ namespace TrainBooking.Infrastructure.Persistence.Interceptors;
 public sealed class DispatchDomainEventsInterceptor(IPublisher publisher)
         : SaveChangesInterceptor
 {
-    private static readonly Action<AggregateRoot> _clearDomainEventsDelegate;
-
-    /// <summary>
-    /// Initializes a delegate for invoking the hidden domain event removal method
-    /// of <see cref="AggregateRoot"/> using reflection.
-    /// </summary>
-    /// <remarks>
-    /// Used to bypass AggregateRoot encapsulation without changing its public API.
-    ///
-    /// IMPORTANT:
-    /// - Depends on the existence of a method named <c>RemoveDomainEvent</c>.
-    /// - The method must be non-static and have a compatible signature.
-    /// - Any change to the method name or signature will result in a runtime error.
-    ///
-    /// The static constructor executes once when the type is first loaded.
-    ///
-    /// If the method cannot be found, an <see cref="InvalidOperationException"/> is thrown,
-    /// which is considered a critical configuration error.
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if the <c>RemoveDomainEvent</c> method is not found or cannot be bound.
-    /// </exception>
-    static DispatchDomainEventsInterceptor()
-    {
-        MethodInfo? methodInfo = typeof(AggregateRoot).GetMethod(
-            "RemoveDomainEvent",
-            BindingFlags.Instance | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException(
-                "Critical error: Cannot finde 'RemoveDomainEvent' method in AggregateRoot.");
-        _clearDomainEventsDelegate = (Action<AggregateRoot>)Delegate.CreateDelegate(
-            typeof(Action<AggregateRoot>),
-            methodInfo);
-    }
-
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData,
         int result,
@@ -66,11 +31,11 @@ public sealed class DispatchDomainEventsInterceptor(IPublisher publisher)
         while (unprocessedDomainEvents.Count != 0)
         {
             var eventsToDispatch = unprocessedDomainEvents.ToList();
-            ClearDomainEvents(dbContext);
             await DispatchDomainEventsAsync(eventsToDispatch, ct);
             processedDomainEvents.AddRange(eventsToDispatch);
             unprocessedDomainEvents = [.. GetDomainEvents(dbContext).Where(e => !processedDomainEvents.Contains(e))];
         }
+        ClearDomainEvents(dbContext);
     }
 
     private List<AggregateRoot> GetTrackedAggregateRoots(DbContext dbContext) =>
@@ -91,7 +56,7 @@ public sealed class DispatchDomainEventsInterceptor(IPublisher publisher)
         List<AggregateRoot> aggregateRoots = GetTrackedAggregateRoots(dbContext);
         foreach (AggregateRoot aggregate in aggregateRoots)
         {
-            _clearDomainEventsDelegate(aggregate);
+            aggregate.ClearDomainEvents();
         }
     }
 
