@@ -31,11 +31,11 @@ public sealed class DispatchDomainEventsInterceptor(IPublisher publisher)
         while (unprocessedDomainEvents.Count != 0)
         {
             var eventsToDispatch = unprocessedDomainEvents.ToList();
+            ClearDomainEvents(dbContext);
             await DispatchDomainEventsAsync(eventsToDispatch, ct);
             processedDomainEvents.AddRange(eventsToDispatch);
             unprocessedDomainEvents = [.. GetDomainEvents(dbContext).Where(e => !processedDomainEvents.Contains(e))];
         }
-        ClearDomainEvents(dbContext);
     }
 
     private List<AggregateRoot> GetTrackedAggregateRoots(DbContext dbContext) =>
