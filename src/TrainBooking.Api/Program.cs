@@ -1,4 +1,5 @@
 using TrainBooking.Api.Middleware;
+using TrainBooking.Application;
 using TrainBooking.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
 WebApplication app = builder.Build();
 
