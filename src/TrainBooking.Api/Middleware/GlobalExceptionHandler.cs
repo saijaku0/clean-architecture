@@ -14,7 +14,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
         if (httpContext.Response.HasStarted)
         {
             logger.LogWarning("Response has already started, exception handler skipped");
-            return false;  
+            return false;
         }
 
         (int statusCode, string title, string detail) = exception switch
@@ -33,7 +33,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
             Title = title,
             Detail = detail,
             Type = $"https://httpstatuses.com/{statusCode}",
-            Instance = httpContext.Request.Path 
+            Instance = httpContext.Request.Path
         };
 
         problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
