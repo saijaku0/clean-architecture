@@ -1,3 +1,4 @@
+using TrainBooking.Api.Middleware;
 using TrainBooking.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,9 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -18,7 +22,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseExceptionHandler();
 app.UseAuthorization();
 
 app.MapControllers();
