@@ -44,8 +44,13 @@ public abstract class CommandHandler<TCommand, TResponse>(IUnitOfWork unitOfWork
 {
     protected readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-    public async Task<Result<TResponse>> Handle(TCommand request, CancellationToken ct) =>
-        await HandleAsync(request, ct);
+    public async Task<Result<TResponse>> Handle(TCommand request, CancellationToken ct)
+    {
+        Result<TResponse> result = await HandleAsync(request, ct);
+        if (result.IsSuccess)
+            await _unitOfWork.CommitAsync(ct);
+        return result;
+    }
 
     /// <summary>
     /// Processes the given command asynchronously and returns a result.
