@@ -3,8 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using TrainBooking.Application;
-using TrainBooking.Infrastructure;
 using TrainBooking.Infrastructure.Persistence;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
@@ -13,9 +11,6 @@ builder.Configuration.AddUserSecrets<Program>();
 
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(ApplicationAssemblyMarker).Assembly));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString, b => b.MigrationsAssembly("TrainBooking.Migrations")));
