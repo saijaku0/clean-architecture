@@ -14,5 +14,30 @@ services:
     ports:
       - "6379:6379"
 
+  migrations:
+    build:
+      context: .
+      dockerfile: src/TrainBooking.Migrations/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=TrainBooking;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+    depends_on:
+      mssql:
+        condition: service_started
+
+  api: 
+    build:
+      context: .
+      dockerfile: src/TrainBooking.Api/Dockerfile
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=TrainBooking;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+    ports:
+      - "5000:8080"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+
 volumes:
   mssql_data:
