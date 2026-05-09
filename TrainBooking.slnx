@@ -1,10 +1,18 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/TrainBooking.Api/TrainBooking.Api.csproj" />
+    <Project Path="src/TrainBooking.Api/TrainBooking.Api.csproj">
+      <BuildDependency Project="src/TrainBooking.Application/TrainBooking.Application.csproj" />
+      <BuildDependency Project="src/TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj" />
+    </Project>
     <Project Path="src/TrainBooking.Application/TrainBooking.Application.csproj" />
     <Project Path="src/TrainBooking.Domain/TrainBooking.Domain.csproj" />
-    <Project Path="src/TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj" />
-    <Project Path="src/TrainBooking.Migrations/TrainBooking.Migrations.csproj" />
+    <Project Path="src/TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj">
+      <BuildDependency Project="src/TrainBooking.Application/TrainBooking.Application.csproj" />
+      <BuildDependency Project="src/TrainBooking.Domain/TrainBooking.Domain.csproj" />
+    </Project>
+    <Project Path="src/TrainBooking.Migrations/TrainBooking.Migrations.csproj">
+      <BuildDependency Project="src/TrainBooking.Infrastructure/TrainBooking.Infrastructure.csproj" />
+    </Project>
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TrainBooking.Tests/TrainBooking.Tests.csproj" />

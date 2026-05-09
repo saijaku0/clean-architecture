@@ -11,8 +11,8 @@ namespace TrainBooking.Domain.Common.Entities;
 /// </remarks>
 public abstract class EntityBase : Entity<Guid>
 {
-    public DateTime CreateAt { get; protected init; } = DateTime.UtcNow;
-    public DateTime? UpdateAt { get; protected set; }
+    public DateTime CreatedAt { get; protected init; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; protected set; }
 
     protected EntityBase(Guid id) : base(id)
     {
@@ -20,5 +20,5 @@ public abstract class EntityBase : Entity<Guid>
             throw new ArgumentException("Id cannot be empty.", nameof(id));
     }
     protected EntityBase() { }
-    protected void Touch() => UpdateAt = DateTime.UtcNow;
+    protected void Touch() => UpdatedAt = DateTime.UtcNow;
 }

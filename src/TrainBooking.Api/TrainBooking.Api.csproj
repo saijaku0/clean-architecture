@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>0e7cf268-b61a-4d16-ae24-aa723e8518a7</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UserSecretsId>4f5cde48-e63c-4e72-9e97-17babe477cdd</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,8 +17,13 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.14.3" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.14.9" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TrainBooking.Infrastructure\TrainBooking.Infrastructure.csproj" />
+    <ProjectReference Include="..\TrainBooking.Application\TrainBooking.Application.csproj" />
   </ItemGroup>
 
 </Project>

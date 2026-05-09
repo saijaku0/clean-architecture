@@ -1,10 +1,31 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using TrainBooking.Api.Middleware;
+using TrainBooking.Api.Service;
+using TrainBooking.Application;
+using TrainBooking.Application.Abstractions.Identity;
+using TrainBooking.Infrastructure;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer();
+
+builder.Services.ConfigureOptions<Auth0JwtBearerOptionsConfigurator>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 WebApplication app = builder.Build();
 
@@ -15,9 +36,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseExceptionHandler();
+app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<Auth0UserProvisioningMiddleware>();
 app.MapControllers();
 
 app.Run();
