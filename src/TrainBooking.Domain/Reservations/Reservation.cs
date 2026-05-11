@@ -8,7 +8,7 @@ using TrainBooking.Domain.TripSeats;
 
 namespace TrainBooking.Domain.Reservations;
 
-public class Reservation : AggregateRoot
+public sealed class Reservation : AggregateRoot
 {
     public Guid TripId { get; private init; }
     public Guid UserId { get; private init; }
@@ -54,18 +54,23 @@ public class Reservation : AggregateRoot
         Guard.Against.Empty(userId);
         Guard.Against.Null(tripSeats);
 
-        if (tripSeats.Count == 0)
+        if (tripSeats.Count < ReservationPolicy.MinSeats)
             return ReservationErrors.NoSeatSelected();
 
-        if (tripSeats.Count > 4)
-            return ReservationErrors.TooManySeatsSelected(tripSeats.Count);
+        if (tripSeats.Count > ReservationPolicy.MaxSeats)
+            return ReservationErrors.TooManySeatsSelected(
+                tripSeats.Count,
+                ReservationPolicy.MaxSeats);
+
+        if (tripSeats.Any(ts => ts.TripId != tripId))
+            return ReservationErrors.SeatsFromDifferentTrips();
 
         DateTime now = timeProvider.GetUtcNow().UtcDateTime;
         if (tripDepartureTime <= now)
             return ReservationErrors.TripAlreadyDeparted(tripDepartureTime);
 
         var reservationSeats = new List<ReservationSeat>();
-        DateTime expiresAt = now.AddMinutes(15);
+        DateTime expiresAt = now + ReservationPolicy.Ttl;
         decimal totalPrice = tripSeats.Sum(ts => ts.Price);
         var reservationId = Guid.CreateVersion7();
 
@@ -112,10 +117,11 @@ public class Reservation : AggregateRoot
             return pendingResult;
 
         DateTime now = timeProvider.GetUtcNow().UtcDateTime;
-        double hoursUntilDeparture = (TripDepartureTime - now).TotalHours;
-        const int REQUIRED_HOURS = 24;
-        if (hoursUntilDeparture < REQUIRED_HOURS)
-            return ReservationErrors.CannotCancelWithinDepartureWindow(TripDepartureTime, REQUIRED_HOURS);
+        TimeSpan timeUntilDeparture = TripDepartureTime - now;
+        TimeSpan timeBeforeDeparture = ReservationPolicy.MinTimeBeforeDepartureForCancellation;
+
+        if (timeUntilDeparture < timeBeforeDeparture)
+            return ReservationErrors.CannotCancelWithinDepartureWindow(timeBeforeDeparture);
 
         Status = ReservationStatus.Cancelled;
         AddDomainEvent(new ReservationCancelledDomainEvent(Id));

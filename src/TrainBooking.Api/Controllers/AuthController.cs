@@ -7,7 +7,7 @@ namespace TrainBooking.Api.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
-public class AuthController : ControllerBase
+public sealed class AuthController : ControllerBase
 {
     [HttpGet]
     public IActionResult Get([FromServices] ICurrentUserService userService) =>
