@@ -15,13 +15,14 @@ public sealed class ReservationsController(ISender mediator) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> Create(
-        [FromBody] CreateReservationRequest request)
+        [FromBody] CreateReservationRequest request,
+        CancellationToken ct = default)
     {
         var command = new CreateReservationCommand(
             request.TripId,
             request.TripSeatIds);
 
-        Result<CreateReservationResult> result = await mediator.Send(command);
+        Result<CreateReservationResult> result = await mediator.Send(command, ct);
 
         return result.ToActionResult();
     }
