@@ -11,7 +11,7 @@ namespace TrainBooking.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/[controller]")]
-public class ReservationsController(IMediator mediator) : ControllerBase
+public sealed class ReservationsController(ISender mediator) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> Create(
