@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\TrainBooking.Application\TrainBooking.Application.csproj" />
     <ProjectReference Include="..\..\src\TrainBooking.Infrastructure\TrainBooking.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\TrainBooking.Domain\TrainBooking.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TrainBooking.Migrations\TrainBooking.Migrations.csproj" />
   </ItemGroup>
 
 </Project>
