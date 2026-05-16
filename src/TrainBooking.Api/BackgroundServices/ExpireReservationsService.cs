@@ -14,7 +14,7 @@ internal sealed class ExpireReservationsService(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var timer = new PeriodicTimer(_timePeriod);
-        while(await timer.WaitForNextTickAsync(stoppingToken))
+        while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             try
             {
