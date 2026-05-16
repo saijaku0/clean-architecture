@@ -6,6 +6,13 @@ namespace TrainBooking.Infrastructure.Persistence.Repositories;
 
 internal sealed class TripSeatRepository(AppDbContext appDbContext) : ITripSeatRepository
 {
+    public async Task<IReadOnlyCollection<TripSeat>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> tripSeatIds,
+        CancellationToken ct = default) =>
+            await appDbContext.TripSeats
+                .Where(ts => tripSeatIds.Contains(ts.Id))
+                .ToListAsync(ct);
+
     public async Task<IReadOnlyList<TripSeat>> GetByTripIdAsync(
         Guid tripId,
         CancellationToken ct = default) =>
