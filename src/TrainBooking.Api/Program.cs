@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using TrainBooking.Api.BackgroundServices;
 using TrainBooking.Api.Middleware;
 using TrainBooking.Api.Service;
 using TrainBooking.Application;
@@ -17,6 +18,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+
+builder.Services.AddHostedService<ExpireReservationsService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
