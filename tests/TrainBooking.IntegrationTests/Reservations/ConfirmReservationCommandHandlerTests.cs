@@ -82,7 +82,7 @@ public class ConfirmReservationCommandHandlerTests(DatabaseFixture fixture)
 
         Guid reservationId = createResult.Value.ReservationId;
 
-        Guid userIdB = Guid.NewGuid();
+        var userIdB = Guid.NewGuid();
         IServiceProvider servicesUserB = BuildServiceProvider(userIdB);
         ISender mediatorB = servicesUserB.GetRequiredService<ISender>();
 
@@ -115,7 +115,7 @@ public class ConfirmReservationCommandHandlerTests(DatabaseFixture fixture)
         IServiceProvider services = BuildServiceProvider(data.UserId);
         ISender mediator = services.GetRequiredService<ISender>();
 
-        Guid nonExistentReservationId = Guid.NewGuid();
+        var nonExistentReservationId = Guid.NewGuid();
 
         var command = new ConfirmReservationCommand(nonExistentReservationId);
         Result<ConfirmReservationResult> result = await mediator.Send(command);

@@ -62,7 +62,7 @@ internal sealed class ConfirmReservationCommandHandler(
         return new ConfirmReservationResult(
             reservation.Id,
             reservation.TripId,
-            tripSeatIds, 
+            tripSeatIds,
             reservation.TotalPrice,
             reservation.ConfirmedAt!.Value
         );
