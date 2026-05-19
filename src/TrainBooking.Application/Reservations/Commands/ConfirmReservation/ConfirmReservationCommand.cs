@@ -9,4 +9,5 @@ public sealed record ConfirmReservationResult(
     Guid ReservationId,
     Guid TripId,
     IReadOnlyCollection<Guid> TripSeatIds,
-    decimal TotalPrice);
+    decimal TotalPrice,
+    DateTime ConfirmedAt);
