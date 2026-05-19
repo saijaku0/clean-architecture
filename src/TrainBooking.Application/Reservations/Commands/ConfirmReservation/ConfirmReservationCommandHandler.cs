@@ -19,13 +19,18 @@ internal sealed class ConfirmReservationCommandHandler(
         ConfirmReservationCommand request,
         CancellationToken ct)
     {
-        Guid? user = userService.UserId ??
-            throw new UnauthorizedAccessException("User is not authenticated.");
+        Guid? user = userService.UserId;
+        if (user is null)
+        {
+            return Error.Unauthorized(
+                "Reservations.ConfirmReservation.Unauthorized",
+                "You must be authenticated to confirm a reservation.");
+        }
 
         Reservation? reservation = await reservationRepository.GetByIdAsync(request.ReservationId, ct);
         if (reservation is null)
             return Error.NotFound(
-                "Reservations.ReservationNotFound",
+                "Reservations.ConfirmReservation.ReservationNotFound",
                 $"Reservation '{request.ReservationId}' was not found.");
 
         if (user != reservation.UserId)
@@ -41,16 +46,25 @@ internal sealed class ConfirmReservationCommandHandler(
 
         IReadOnlyCollection<TripSeat> tripSeats = await tripSeatRepository.GetByIdsAsync(tripSeatIds, ct);
 
-        reservation.Confirm(timeProvider);
+        Result confirmResult = reservation.Confirm(timeProvider);
+        if (confirmResult.IsFailure)
+            return confirmResult.Error!;
+
         foreach (TripSeat tripSeat in tripSeats)
-            tripSeat.MarkAsSold();
+        {
+            Result markAsSoldResult = tripSeat.MarkAsSold();
+            if (markAsSoldResult.IsFailure)
+                return markAsSoldResult.Error!;
+        }
+
         await _unitOfWork.CommitAsync(ct);
 
         return new ConfirmReservationResult(
             reservation.Id,
             reservation.TripId,
-            [.. tripSeats.Select(ts => ts.Id)],
-            reservation.TotalPrice
+            tripSeatIds, 
+            reservation.TotalPrice,
+            reservation.ConfirmedAt!.Value
         );
     }
 }
