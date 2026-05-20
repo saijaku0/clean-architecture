@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TrainBooking.Application.Abstractions.Identity;
+using TrainBooking.Application.Abstractions.Payments;
 using TrainBooking.Application.Abstractions.Repositories;
+using TrainBooking.Infrastructure.Payments;
 using TrainBooking.Infrastructure.Persistence;
 using TrainBooking.Infrastructure.Persistence.Interceptors;
 using TrainBooking.Infrastructure.Persistence.Repositories;
@@ -32,6 +34,8 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<ITripRepository, TripRepository>();
         services.AddScoped<ITripSeatRepository, TripSeatRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();
+
+        services.AddScoped<IPaymentGateway, PaymentGateway>();
 
         services.AddMemoryCache();
         services.AddScoped<IUserResolver, UserResolver>();
