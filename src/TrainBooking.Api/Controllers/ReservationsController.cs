@@ -1,3 +1,4 @@
+using Azure.Core;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,9 +32,14 @@ public sealed class ReservationsController(ISender mediator) : ControllerBase
     [HttpPost("{reservationId:guid}/confirm")]
     public async Task<IActionResult> Confirm(
         [FromRoute] Guid reservationId,
+        [FromBody] ConfirmReservationRequest request,
         CancellationToken ct = default)
     {
-        var command = new ConfirmReservationCommand(reservationId);
+        var command = new ConfirmReservationCommand(
+            reservationId,
+            request.PaymentToken,
+            request.AvailableFunds);
+
         Result<ConfirmReservationResult> result = await mediator.Send(command, ct);
         return result.ToActionResult();
     }
