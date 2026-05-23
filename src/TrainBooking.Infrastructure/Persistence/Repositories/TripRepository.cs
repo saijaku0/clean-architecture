@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TrainBooking.Application.Abstractions.Repositories;
 using TrainBooking.Application.Common.Pagination;
+using TrainBooking.Application.Trips.GetTripById;
 using TrainBooking.Application.Trips.GetTripList;
 using TrainBooking.Domain.Trips;
 using TrainBooking.Domain.TripSeats.Enums;
@@ -13,6 +14,28 @@ internal sealed class TripRepository(AppDbContext dbContext) : ITripRepository
         Guid id,
         CancellationToken ct = default) =>
             await dbContext.Trips.FirstOrDefaultAsync(t => t.Id == id, ct);
+
+    public async Task<GetTripByIdDto?> GetTripDetailsAsync(
+        Guid tripId,
+        CancellationToken ct)
+    {
+        Trip? trip = await dbContext.Trips.FirstOrDefaultAsync(t => t.Id == tripId, ct);
+        if (trip is null)
+            return null;
+        int availableSeatsCount = await dbContext.TripSeats
+            .CountAsync(ts => ts.TripId == tripId && ts.Status == TripSeatStatus.Available, ct);
+        decimal minPrice = await dbContext.TripSeats
+            .Where(ts => ts.TripId == tripId && ts.Status == TripSeatStatus.Available)
+            .MinAsync(ts => (decimal?)ts.Price, ct) ?? 0m;
+        return new GetTripByIdDto(
+            trip.Id,
+            trip.OriginStation,
+            trip.DestinationStation,
+            trip.DepartureTime,
+            trip.ArrivalTime,
+            availableSeatsCount,
+            minPrice);
+    }
 
     public async Task<PagedResult<TripListItemDto>> GetListAsync(
         string? origin,
