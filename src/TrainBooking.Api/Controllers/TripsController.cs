@@ -36,7 +36,7 @@ public sealed class TripsController(ISender mediator) : ControllerBase
     {
         var query = new GetTripByIdQuery(id);
 
-        Result<GetTripByIdDto> result = await mediator.Send(query, ct);
+        Result<TripDetailsDto> result = await mediator.Send(query, ct);
 
         return result.ToActionResult();
     }
