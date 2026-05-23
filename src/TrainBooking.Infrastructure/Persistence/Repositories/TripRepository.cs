@@ -3,7 +3,9 @@ using TrainBooking.Application.Abstractions.Repositories;
 using TrainBooking.Application.Common.Pagination;
 using TrainBooking.Application.Trips.GetTripById;
 using TrainBooking.Application.Trips.GetTripList;
+using TrainBooking.Domain.Trains;
 using TrainBooking.Domain.Trips;
+using TrainBooking.Domain.TripSeats;
 using TrainBooking.Domain.TripSeats.Enums;
 
 namespace TrainBooking.Infrastructure.Persistence.Repositories;
@@ -15,26 +17,55 @@ internal sealed class TripRepository(AppDbContext dbContext) : ITripRepository
         CancellationToken ct = default) =>
             await dbContext.Trips.FirstOrDefaultAsync(t => t.Id == id, ct);
 
-    public async Task<GetTripByIdDto?> GetTripDetailsAsync(
-        Guid tripId,
-        CancellationToken ct)
+    public async Task<TripDetailsDto?> GetTripDetailsAsync(
+    Guid tripId,
+    CancellationToken ct = default)
     {
-        Trip? trip = await dbContext.Trips.FirstOrDefaultAsync(t => t.Id == tripId, ct);
-        if (trip is null)
-            return null;
-        int availableSeatsCount = await dbContext.TripSeats
-            .CountAsync(ts => ts.TripId == tripId && ts.Status == TripSeatStatus.Available, ct);
-        decimal minPrice = await dbContext.TripSeats
-            .Where(ts => ts.TripId == tripId && ts.Status == TripSeatStatus.Available)
-            .MinAsync(ts => (decimal?)ts.Price, ct) ?? 0m;
-        return new GetTripByIdDto(
+        Trip? trip = await dbContext.Trips
+            .FirstOrDefaultAsync(t => t.Id == tripId, ct);
+
+        if (trip is null) return null;
+
+        Train? train = await dbContext.Trains
+            .Include(t => t.Wagons)
+                .ThenInclude(w => w.Seats)
+            .FirstOrDefaultAsync(t => t.Id == trip.TrainId, ct);
+
+        if (train is null) return null;
+
+        List<TripSeat> tripSeats = await dbContext.TripSeats
+            .Where(ts => ts.TripId == tripId)
+            .ToListAsync(ct);
+
+        var tripSeatBySeatId = tripSeats.ToDictionary(ts => ts.SeatId);
+
+        var wagonDtos = train.Wagons
+            .OrderBy(w => w.Number)
+            .Select(w => new WagonDto(
+                w.Number,
+                w.Class.ToString(),
+                w.Seats
+                    .OrderBy(s => s.Number)
+                    .Select(s =>
+                    {
+                        TripSeat tripSeat = tripSeatBySeatId[s.Id];
+                        return new SeatDto(
+                            tripSeat.Id,
+                            s.Number,
+                            tripSeat.Status.ToString(),
+                            tripSeat.Price);
+                    })
+                    .ToList()))
+            .ToList();
+
+        return new TripDetailsDto(
             trip.Id,
             trip.OriginStation,
             trip.DestinationStation,
             trip.DepartureTime,
             trip.ArrivalTime,
-            availableSeatsCount,
-            minPrice);
+            train.Name,
+            wagonDtos);
     }
 
     public async Task<PagedResult<TripListItemDto>> GetListAsync(
