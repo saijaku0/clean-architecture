@@ -16,7 +16,6 @@ using TrainBooking.Domain.TripSeats.Enums;
 using TrainBooking.Infrastructure;
 using TrainBooking.Infrastructure.Persistence;
 using TrainBooking.IntegrationTests.Infrastructure;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TrainBooking.IntegrationTests.Reservations;
 
@@ -40,7 +39,10 @@ public class ConfirmReservationCommandHandlerTests(DatabaseFixture fixture)
 
         Guid reservationId = createResult.Value.ReservationId;
 
-        var confirmCommand = new ConfirmReservationCommand(ReservationId: reservationId);
+        var confirmCommand = new ConfirmReservationCommand(
+            reservationId,
+            "tok_visa_4242",
+            500m);
         Result<ConfirmReservationResult> confirmResult = await mediator.Send(confirmCommand);
 
         confirmResult.IsSuccess.Should().BeTrue();
@@ -86,7 +88,10 @@ public class ConfirmReservationCommandHandlerTests(DatabaseFixture fixture)
         IServiceProvider servicesUserB = BuildServiceProvider(userIdB);
         ISender mediatorB = servicesUserB.GetRequiredService<ISender>();
 
-        var confirmCommand = new ConfirmReservationCommand(reservationId);
+        var confirmCommand = new ConfirmReservationCommand(
+            reservationId,
+            "tok_visa_4242",
+            500m);
         Result<ConfirmReservationResult> result = await mediatorB.Send(confirmCommand);
 
         result.IsFailure.Should().BeTrue();
@@ -117,7 +122,10 @@ public class ConfirmReservationCommandHandlerTests(DatabaseFixture fixture)
 
         var nonExistentReservationId = Guid.NewGuid();
 
-        var command = new ConfirmReservationCommand(nonExistentReservationId);
+        var command = new ConfirmReservationCommand(
+            nonExistentReservationId,
+            "tok_visa_4242",
+            500m);
         Result<ConfirmReservationResult> result = await mediator.Send(command);
 
         result.IsFailure.Should().BeTrue();
@@ -142,11 +150,17 @@ public class ConfirmReservationCommandHandlerTests(DatabaseFixture fixture)
 
         Guid reservationId = createResult.Value.ReservationId;
 
-        var firstConfirm = new ConfirmReservationCommand(reservationId);
+        var firstConfirm = new ConfirmReservationCommand(
+            reservationId,
+            "tok_visa_4242",
+            500m);
         Result<ConfirmReservationResult> firstResult = await mediator.Send(firstConfirm);
         firstResult.IsSuccess.Should().BeTrue("first Confirm must succeed");
 
-        var secondConfirm = new ConfirmReservationCommand(reservationId);
+        var secondConfirm = new ConfirmReservationCommand(
+            reservationId,
+            "tok_visa_4242",
+            500m);
         Result<ConfirmReservationResult> secondResult = await mediator.Send(secondConfirm);
 
         secondResult.IsFailure.Should().BeTrue();
