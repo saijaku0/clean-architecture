@@ -1,4 +1,5 @@
 using TrainBooking.Application.Common.Pagination;
+using TrainBooking.Application.Trips.GetTripById;
 using TrainBooking.Application.Trips.GetTripList;
 using TrainBooking.Domain.Trips;
 
@@ -7,6 +8,7 @@ namespace TrainBooking.Application.Abstractions.Repositories;
 public interface ITripRepository
 {
     Task<Trip?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<GetTripByIdDto?> GetTripDetailsAsync(Guid tripId, CancellationToken ct);
     Task<PagedResult<TripListItemDto>> GetListAsync(
         string? origin,
         string? destination,
