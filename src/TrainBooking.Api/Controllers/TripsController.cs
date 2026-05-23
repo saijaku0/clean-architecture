@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using TrainBooking.Api.Extensions;
 using TrainBooking.Application.Common.Pagination;
+using TrainBooking.Application.Trips.GetTripById;
 using TrainBooking.Application.Trips.GetTripList;
 using TrainBooking.Domain.Common.Results;
 
@@ -24,6 +25,18 @@ public sealed class TripsController(ISender mediator) : ControllerBase
             origin, destination, departureDate, pageNumber, pageSize);
 
         Result<PagedResult<TripListItemDto>> result = await mediator.Send(query, ct);
+
+        return result.ToActionResult();
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(
+        [FromRoute] Guid id,
+        CancellationToken ct = default)
+    {
+        var query = new GetTripByIdQuery(id);
+
+        Result<GetTripByIdDto> result = await mediator.Send(query, ct);
 
         return result.ToActionResult();
     }
