@@ -17,7 +17,7 @@ internal sealed class GetReservationByIdQueryHandler(
         Guid? userId = userService.UserId;
         if (userId is null)
         {
-            return Error.Unauthorized("Reservations.Unauthorized", "Do must be authenticated to view reservation details.");
+            return Error.Unauthorized("Reservations.Unauthorized", "You must be authenticated to view reservation details.");
         }
 
         ReservationDetailsDto? reservation =
