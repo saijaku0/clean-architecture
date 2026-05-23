@@ -8,7 +8,7 @@ namespace TrainBooking.Application.Abstractions.Repositories;
 public interface ITripRepository
 {
     Task<Trip?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<GetTripByIdDto?> GetTripDetailsAsync(Guid tripId, CancellationToken ct);
+    Task<TripDetailsDto?> GetTripDetailsAsync(Guid tripId, CancellationToken ct);
     Task<PagedResult<TripListItemDto>> GetListAsync(
         string? origin,
         string? destination,
