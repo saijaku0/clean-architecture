@@ -1,8 +1,10 @@
 using TrainBooking.Application.Abstractions.Commands;
 using TrainBooking.Application.Abstractions.Identity;
+using TrainBooking.Application.Abstractions.Payments;
 using TrainBooking.Application.Abstractions.Repositories;
 using TrainBooking.Domain.Common.Results;
 using TrainBooking.Domain.Reservations;
+using TrainBooking.Domain.Reservations.Enums;
 using TrainBooking.Domain.TripSeats;
 
 namespace TrainBooking.Application.Reservations.Commands.ConfirmReservation;
@@ -11,6 +13,7 @@ internal sealed class ConfirmReservationCommandHandler(
     IReservationRepository reservationRepository,
     ICurrentUserService userService,
     ITripSeatRepository tripSeatRepository,
+    IPaymentGateway paymentGateway,
     TimeProvider timeProvider,
     IUnitOfWork unitOfWork)
     : CommandHandler<ConfirmReservationCommand, ConfirmReservationResult>(unitOfWork)
@@ -39,6 +42,31 @@ internal sealed class ConfirmReservationCommandHandler(
                 "Reservations.ConfirmReservation.Forbidden",
                 "You are not the owner of this reservation.");
         }
+
+        if (reservation.Status != ReservationStatus.Pending)
+        {
+            return Error.Conflict(
+                "Reservations.ConfirmReservation.NotPending",
+                $"Reservation in status '{reservation.Status}' cannot be confirmed.");
+        }
+
+        DateTime now = timeProvider.GetUtcNow().UtcDateTime;
+        if (now > reservation.ExpiresAt)
+        {
+            return Error.Conflict(
+                "Reservations.ConfirmReservation.Expired",
+                $"Reservation expired at {reservation.ExpiresAt:o}.");
+        }
+
+        Result<PaymentResult> paymentResult = await paymentGateway.ChargeAsync(
+            amount: reservation.TotalPrice,
+            paymentToken: request.PaymentToken,
+            availableFunds: request.AvailableFunds,
+            idempotencyKey: reservation.Id,
+            ct: ct);
+
+        if (paymentResult.IsFailure)
+            return paymentResult.Error!;
 
         var tripSeatIds = reservation.ReservationSeats
             .Select(rs => rs.TripSeatId)
