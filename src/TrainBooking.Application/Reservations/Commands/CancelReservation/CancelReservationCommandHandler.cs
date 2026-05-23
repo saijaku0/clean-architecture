@@ -62,6 +62,8 @@ internal sealed class CancelReservationCommandHandler(
             }
         }
 
+        await unitOfWork.CommitAsync(ct);
+
         return Result.Success();
     }
 }
