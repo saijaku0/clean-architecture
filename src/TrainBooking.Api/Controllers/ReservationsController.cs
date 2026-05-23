@@ -31,14 +31,14 @@ public sealed class ReservationsController(ISender mediator) : ControllerBase
         return result.ToActionResult();
     }
 
-    [HttpPost("{reservationId:guid}/confirm")]
+    [HttpPost("{id:guid}/confirm")]
     public async Task<IActionResult> Confirm(
-        [FromRoute] Guid reservationId,
+        [FromRoute] Guid id,
         [FromBody] ConfirmReservationRequest request,
         CancellationToken ct = default)
     {
         var command = new ConfirmReservationCommand(
-            reservationId,
+            id,
             request.PaymentToken,
             request.AvailableFunds);
 
