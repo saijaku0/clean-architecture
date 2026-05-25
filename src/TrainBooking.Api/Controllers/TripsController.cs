@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TrainBooking.Api.Extensions;
 using TrainBooking.Application.Common.Pagination;
@@ -9,6 +10,7 @@ using TrainBooking.Domain.Common.Results;
 namespace TrainBooking.Api.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/v1/[controller]")]
 public sealed class TripsController(ISender mediator) : ControllerBase
 {
