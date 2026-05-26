@@ -1,0 +1,24 @@
+@use "../variables.scss";
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: variables.$screen-padding-sm;
+
+    @media (min-width: variables.$screen-md) {
+        padding: variables.$screen-padding-md;
+        // background-color: red;
+    }    
+
+    @media (min-width: variables.$screen-lg) {
+        padding: variables.$screen-padding-lg;
+        // background-color: green;
+    }
+
+    @media (min-width: variables.$screen-xl) {
+        padding: variables.$screen-padding-xl;
+        // background-color: blue;
+    }
+}
+

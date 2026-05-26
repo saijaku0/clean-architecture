@@ -1,0 +1,88 @@
+@use "../../../_variables.scss";
+
+@mixin icon-style($color, $background-color, $width: 30px, $height: 30px) {
+    color: $color;
+    background-color: $background-color;
+    width: $width;
+    height: $height;
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px variables.$screen-padding-horizontal-sm;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    // background-color: greenyellow;
+
+    .account-link {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+
+        color: var(--text-color);
+        text-decoration: none;
+
+        // background-color: orange;
+
+        .account-name {
+            font-weight: 500;
+            margin-right: 8px;
+            padding-right: 8px;
+            border-right: 1px solid var(--text-color);
+            display: none;
+        }
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    @media (min-width: variables.$screen-md) {
+        font-weight: 500;
+        font-size: 1.25rem;
+        padding: 16px variables.$screen-padding-horizontal-md;
+
+        // background-color: lightgreen;
+
+        .account-link {
+            .account-name {
+                display: block;
+            }
+        }
+    }
+
+    @media (min-width: variables.$screen-lg) {
+        padding: 16px variables.$screen-padding-horizontal-lg;
+
+        // background-color: lightblue;
+    }
+
+    @media (min-width: variables.$screen-xl) {
+        font-size: 1.7rem;
+        font-weight: 700;
+        padding: 16px variables.$screen-padding-horizontal-xl;
+
+        // background-color: cyan;
+    }
+}
+
+.icon-filled {
+    @include icon-style(var(--text-color), transparent);
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.icon-outlined {
+    @include icon-style(var(--text-color), transparent);
+
+    font-size: xx-large;
+}
