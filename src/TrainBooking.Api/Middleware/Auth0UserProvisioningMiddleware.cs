@@ -18,7 +18,11 @@ internal sealed class Auth0UserProvisioningMiddleware(RequestDelegate next)
         string? name = context.User.FindFirst("https://api.trainbooking.app/name")?.Value;
 
         if (sub is null || email is null)
-            throw new InvalidOperationException("Missing required claims in JWT");
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.CompleteAsync();
+            return;
+        }
 
         Guid userId = await resolver.ResolveAsync(
             new Auth0UserInfo(sub, email, name),

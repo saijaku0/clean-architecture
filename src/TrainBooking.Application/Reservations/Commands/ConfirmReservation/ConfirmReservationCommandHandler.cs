@@ -43,21 +43,6 @@ internal sealed class ConfirmReservationCommandHandler(
                 "You are not the owner of this reservation.");
         }
 
-        if (reservation.Status != ReservationStatus.Pending)
-        {
-            return Error.Conflict(
-                "Reservations.ConfirmReservation.NotPending",
-                $"Reservation in status '{reservation.Status}' cannot be confirmed.");
-        }
-
-        DateTime now = timeProvider.GetUtcNow().UtcDateTime;
-        if (now > reservation.ExpiresAt)
-        {
-            return Error.Conflict(
-                "Reservations.ConfirmReservation.Expired",
-                $"Reservation expired at {reservation.ExpiresAt:o}.");
-        }
-
         Result<PaymentResult> paymentResult = await paymentGateway.ChargeAsync(
             amount: reservation.TotalPrice,
             paymentToken: request.PaymentToken,
@@ -84,8 +69,6 @@ internal sealed class ConfirmReservationCommandHandler(
             if (markAsSoldResult.IsFailure)
                 return markAsSoldResult.Error!;
         }
-
-        await _unitOfWork.CommitAsync(ct);
 
         return new ConfirmReservationResult(
             reservation.Id,
