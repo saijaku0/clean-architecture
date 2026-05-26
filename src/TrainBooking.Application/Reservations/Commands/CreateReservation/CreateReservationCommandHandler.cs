@@ -93,10 +93,7 @@ internal sealed class CreateReservationCommandHandler(
             seat.Reserve();
 
         await _reservationRepository.AddAsync(reservation, ct);
-
-        await _unitOfWork.CommitAsync(ct);
         await tx.CommitAsync(ct);
-
         return new CreateReservationResult(
             reservation.Id,
             reservation.TotalPrice,
