@@ -1,0 +1,32 @@
+<div class="trip-list-container">
+    <h1>Available Trips</h1>
+
+    @if (tripStore.loading()) {
+      <p>Loading trips...</p>
+    } @else if (tripStore.error()) {
+      <p class="error">{{ tripStore.error() }}</p>
+    } @else if (tripStore.trips().length === 0) {
+      <p>No trips available.</p>
+    } @else {
+      <div class="trips">
+        @for (trip of tripStore.trips(); track trip.tripId) {
+          <div class="trip-card">
+            <div class="route">
+              <span class="station">{{ trip.originStation }}</span>
+              <span class="arrow">→</span>
+              <span class="station">{{ trip.destinationStation }}</span>
+            </div>
+            <div class="times">
+              <span>{{ trip.departureTime | date: 'shortTime' }}</span>
+              <span>—</span>
+              <span>{{ trip.arrivalTime | date: 'shortTime' }}</span>
+            </div>
+            <div class="info">
+              <span>{{ trip.availableSeatsCount }} seats available</span>
+              <span class="price">from {{ trip.minPrice }} USD</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>

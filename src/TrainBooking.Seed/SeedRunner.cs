@@ -88,7 +88,7 @@ internal sealed class SeedRunner(
             trainId: train.Id,
             origin: "Kyiv",
             destination: "Lviv",
-            departure: timeProvider.GetUtcNow().UtcDateTime.AddDays(1),
+            departure: timeProvider.GetUtcNow().UtcDateTime.AddDays(10),
             duration: TimeSpan.FromHours(8));
 
         List<TripSeat> tripSeats = dataFactory.CreateTripSeatsForTrain(
