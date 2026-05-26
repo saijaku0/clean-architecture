@@ -4,6 +4,7 @@ using TrainBooking.Application.Reservations.Queries.GetMyReservations;
 using TrainBooking.Application.Reservations.Queries.GetReservationById;
 using TrainBooking.Domain.Reservations;
 using TrainBooking.Domain.Reservations.Enums;
+using TrainBooking.Domain.Trips;
 
 namespace TrainBooking.Infrastructure.Persistence.Repositories;
 
@@ -50,30 +51,37 @@ internal sealed class ReservationRepository(AppDbContext dbContext) : IReservati
         Guid userId,
         CancellationToken ct = default)
     {
-        var query = from r in dbContext.Reservations.AsNoTracking()
-                    where r.Id == reservationId && r.UserId == userId
-                    join t in dbContext.Trips.AsNoTracking() on r.TripId equals t.Id
-                    select new { Reservation = r, Trip = t };
+        Reservation? reservation = await dbContext.Reservations
+            .Include(r => r.ReservationSeats)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == reservationId && r.UserId == userId, ct);
 
-        var data = await query.FirstOrDefaultAsync(ct);
-
-        if (data is null)
+        if (reservation is null)
         {
             return null;
         }
 
-        var seatIds = data.Reservation.ReservationSeats
+        Trip? trip = await dbContext.Trips
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == reservation.TripId, ct);
+
+        if (trip is null)
+        {
+            return null;
+        }
+
+        var seatIds = reservation.ReservationSeats
             .Select(rs => rs.TripSeatId)
             .ToList();
 
         return new ReservationDetailsDto(
-            data.Reservation.Id,
-            data.Reservation.TripId,
-            data.Trip.OriginStation,
-            data.Trip.DestinationStation,
-            data.Trip.DepartureTime,
-            data.Reservation.TotalPrice,
-            data.Reservation.Status.ToString(),
+            reservation.Id,
+            reservation.TripId,
+            trip.OriginStation,
+            trip.DestinationStation,
+            trip.DepartureTime,
+            reservation.TotalPrice,
+            reservation.Status.ToString(),
             seatIds
         );
     }

@@ -165,7 +165,7 @@ public class ConfirmReservationCommandHandlerTests(DatabaseFixture fixture)
 
         secondResult.IsFailure.Should().BeTrue();
         secondResult.Error!.Type.Should().Be(ErrorType.Conflict);
-        secondResult.Error.Code.Should().Be("Reservations.ConfirmReservation.NotPending");
+        secondResult.Error.Code.Should().Be("reservation.already_confirmed");
     }
 
     // Could be extracted to a common test base class
