@@ -1,8 +1,103 @@
 <header class="header">
   <mat-icon class="icon-filled">train</mat-icon>
 
-  <a [routerLink]="['/my-account']" class="account-link">
-    <span class="account-name">John Doe</span>
-    <mat-icon class="icon-outlined">account_circle</mat-icon>
-  </a>
+  <div class="account-block">
+    <nav class="navigation-link">
+      <a [routerLink]="['/']" class="navigation-link-trains">
+        <span class="account-name">Trains</span>
+      </a>
+      <a [routerLink]="['/my-account']" class="navigation-link-reservations">
+        <span class="account-name">My Reservations</span>
+      </a>
+    </nav>
+
+    <button
+      mat-icon-button
+      (click)="themeService.toggleTheme()"
+      aria-label="Toggle theme"
+      class="toggle-theme-button"
+    >
+      <mat-icon>
+        {{ themeService.isDarkTheme() ? 'light_mode' : 'dark_mode' }}
+      </mat-icon>
+    </button>
+
+    @if (auth.isAuthenticated$ | async) {
+      @if (auth.user$ | async; as user) {
+        <div class="user-profile">
+          <img [src]="user.picture" alt="Avatar" />
+          <button mat-icon-button (click)="logout()" title="Sign out">
+            <mat-icon>logout</mat-icon>
+          </button>
+        </div>
+      }
+    } @else {
+      <button (click)="login()" class="sign-in">Sign in</button>
+    }
+  </div>
+
+  <button
+    mat-icon-button
+    class="burger-button"
+    (click)="toggleMenu()"
+    [attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+    [attr.aria-expanded]="menuOpen()"
+  >
+    <mat-icon>{{ menuOpen() ? 'close' : 'menu' }}</mat-icon>
+  </button>
 </header>
+
+<div
+  class="mobile-overlay"
+  [class.open]="menuOpen()"
+  (click)="closeMenu()"
+  aria-hidden="true"
+></div>
+
+<aside
+  class="mobile-menu"
+  [class.open]="menuOpen()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Navigation menu"
+>
+  <nav class="mobile-nav">
+    <a [routerLink]="['/']" class="mobile-item" (click)="closeMenu()">
+      <mat-icon>train</mat-icon>
+      <span>Trains</span>
+    </a>
+    <a [routerLink]="['/my-account']" class="mobile-item" (click)="closeMenu()">
+      <mat-icon>person</mat-icon>
+      <span>My Reservations</span>
+    </a>
+  </nav>
+
+  <div class="mobile-divider"></div>
+
+  <button class="mobile-item" (click)="themeService.toggleTheme()">
+    <mat-icon>
+      {{ themeService.isDarkTheme() ? 'light_mode' : 'dark_mode' }}
+    </mat-icon>
+    <span>{{ themeService.isDarkTheme() ? 'Light mode' : 'Dark mode' }}</span>
+  </button>
+
+  @if (auth.isAuthenticated$ | async) {
+    @if (auth.user$ | async; as user) {
+      <div class="mobile-divider"></div>
+      <div class="mobile-user-card">
+        <img [src]="user.picture" alt="Avatar" />
+        <span>{{ user.name }}</span>
+      </div>
+      <button class="mobile-item" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Sign out</span>
+      </button>
+    }
+  } @else {
+    <div class="mobile-divider"></div>
+    <button class="mobile-item" (click)="login()">
+      <mat-icon>login</mat-icon>
+      <span>Sign in</span>
+    </button>
+  }
+</aside>
