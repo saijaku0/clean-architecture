@@ -6,13 +6,13 @@ import { TripService } from './trip.service';
 export class TripStore {
   private tripService = inject(TripService);
 
-  private tripsSignal = signal<TripListItemDto[]>([]);
-  private loadingSignal = signal(false);
-  private errorSignal = signal<string | null>(null);
+  private readonly tripsSignal = signal<TripListItemDto[]>([]);
+  private readonly loadingSignal = signal(false);
+  private readonly errorSignal = signal<string | null>(null);
 
-  trips = this.tripsSignal.asReadonly();
-  loading = this.loadingSignal.asReadonly();
-  error = this.errorSignal.asReadonly();
+  readonly trips = this.tripsSignal.asReadonly();
+  readonly loading = this.loadingSignal.asReadonly();
+  readonly error = this.errorSignal.asReadonly();
 
   loadTrips() {
     this.loadingSignal.set(true);
