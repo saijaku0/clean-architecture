@@ -1,88 +1,256 @@
-@use "../../../_variables.scss";
+@use '../../../_variables.scss';
 
-@mixin icon-style($color, $background-color, $width: 30px, $height: 30px) {
-    color: $color;
-    background-color: $background-color;
-    width: $width;
-    height: $height;
+@mixin icon-style($background-color, $width: 30px, $height: 30px) {
+  color: var(--mat-sys-on-surface);
+  background-color: $background-color;
+  width: $width;
+  height: $height;
 
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    line-height: 1;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 1;
+}
+
+@mixin nav-links() {
+  position: relative;
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+  padding-bottom: 4px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transform: translateX(0);
+    width: 0;
+    height: 2px;
+    background-color: var(--mat-sys-on-surface);
+    transition: width 0.3s ease-in-out;
+  }
+
+  &:hover {
+    cursor: pointer;
+
+    &::after {
+      width: 100%;
+    }
+  }
 }
 
 .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px variables.padding(sm, horizontal);
+  font-size: 1rem;
+  box-shadow: 0 2px 6px variables.color(shadow, soft);
+
+  .toggle-theme-button {
+    background-color: transparent;
+    border: none;
+    color: var(--mat-sys-on-surface);
+    margin-right: 0.5rem;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .sign-in {
+    background-color: inherit;
+    border: none;
+
+    @include nav-links();
+  }
+
+  .user-profile {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px variables.$screen-padding-horizontal-sm;
-    font-size: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    gap: 8px;
 
-    // background-color: greenyellow;
-
-    .account-link {
-        display: flex;
-        align-items: center;
-        align-self: stretch;
-
-        color: var(--text-color);
-        text-decoration: none;
-
-        // background-color: orange;
-
-        .account-name {
-            font-weight: 500;
-            margin-right: 8px;
-            padding-right: 8px;
-            border-right: 1px solid var(--text-color);
-            display: none;
-        }
-
-        &:hover {
-            cursor: pointer;
-        }
+    img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
     }
+  }
 
-    @media (min-width: variables.$screen-md) {
-        font-weight: 500;
-        font-size: 1.25rem;
-        padding: 16px variables.$screen-padding-horizontal-md;
+  .burger-button {
+    background-color: transparent;
+    border: none;
+    color: var(--mat-sys-on-surface);
 
-        // background-color: lightgreen;
-
-        .account-link {
-            .account-name {
-                display: block;
-            }
-        }
+    &:hover {
+      cursor: pointer;
     }
+  }
+}
 
-    @media (min-width: variables.$screen-lg) {
-        padding: 16px variables.$screen-padding-horizontal-lg;
+.account-block {
+  display: none;
+  align-items: center;
+  align-self: stretch;
+}
 
-        // background-color: lightblue;
-    }
+.navigation-link {
+  font-weight: 500;
+  margin-right: 8px;
+  padding-right: 8px;
+  border-right: 1px solid var(--mat-sys-on-surface);
+  display: none;
 
-    @media (min-width: variables.$screen-xl) {
-        font-size: 1.7rem;
-        font-weight: 700;
-        padding: 16px variables.$screen-padding-horizontal-xl;
+  gap: 1rem;
 
-        // background-color: cyan;
-    }
+  &-trains {
+    @include nav-links();
+  }
+
+  &-reservations {
+    @include nav-links();
+  }
 }
 
 .icon-filled {
-    @include icon-style(var(--text-color), transparent);
-    &:hover {
-        cursor: pointer;
-    }
+  @include icon-style(transparent);
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .icon-outlined {
-    @include icon-style(var(--text-color), transparent);
+  @include icon-style(transparent);
 
-    font-size: xx-large;
+  font-size: xx-large;
+}
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease,
+    visibility 200ms ease;
+  z-index: 1000;
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(80vw, 320px);
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  transform: translateX(100%);
+  transition: transform 220ms ease;
+  z-index: 1001;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: -2px 0 16px variables.color(shadow, soft);
+
+  &.open {
+    transform: translateX(0);
+  }
+}
+
+.mobile-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  text-decoration: none;
+  color: var(--mat-sys-on-surface);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  mat-icon {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.mobile-divider {
+  height: 1px;
+  background-color: var(--mat-sys-outline-variant);
+  margin: 8px 4px;
+}
+
+.mobile-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  font-size: 0.875rem;
+
+  img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+}
+
+@media (min-width: variables.breakpoint(md)) {
+  .header {
+    font-weight: 500;
+    font-size: 1.25rem;
+    padding: 16px variables.padding(md, horizontal);
+
+    .toggle-theme-button {
+      margin-right: 0;
+    }
+
+    .navigation-link {
+      display: flex;
+    }
+
+    .sign-in {
+      font-size: large;
+    }
+
+    .burger-button {
+      display: none;
+    }
+  }
+
+  .account-block {
+    display: flex;
+  }
+
+  .mobile-overlay,
+  .mobile-menu {
+    display: none;
+  }
+}
+
+@media (min-width: variables.breakpoint(lg)) {
+  .header {
+    padding: 16px variables.padding(lg, horizontal);
+  }
+}
+
+@media (min-width: variables.breakpoint(xl)) {
+  .header {
+    font-weight: 700;
+    padding: 16px variables.padding(xl, horizontal);
+  }
 }
