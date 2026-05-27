@@ -1,15 +1,159 @@
-$screen-xs: 0px;
-$screen-sm: 576px;
-$screen-md: 768px;
-$screen-lg: 992px;
-$screen-xl: 1200px;
+@use 'sass:map';
+@use 'sass:meta';
 
-$screen-padding-sm: 0 0.5rem;
-$screen-padding-md: 0 1rem;
-$screen-padding-lg: 0 5rem;
-$screen-padding-xl: 0 21rem;
+$breakpoints: (
+  xs: 0px,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+);
 
-$screen-padding-horizontal-sm: 0.5rem;
-$screen-padding-horizontal-md: 1rem;
-$screen-padding-horizontal-lg: 5rem;
-$screen-padding-horizontal-xl: 21rem;
+$paddings: (
+  screen: (
+    sm: 0 0.5rem,
+    md: 0 1rem,
+    lg: 0 5rem,
+    xl: 0 21rem,
+  ),
+  horizontal: (
+    sm: 0.5rem,
+    md: 1rem,
+    lg: 5rem,
+    xl: 21rem,
+  ),
+);
+
+$colors-light: (
+  surface: (
+    bg: #fafaf9,
+    base: #ffffff,
+    muted: #f4f2ec,
+    border: #e8e6e1,
+    border-strong: #d5d2cb,
+  ),
+  text: (
+    primary: #1c1c1a,
+    secondary: #6b6862,
+    tertiary: #a8a59e,
+  ),
+  semantic: (
+    accent: (
+      base: #0f6e56,
+      bg: #e1f5ee,
+    ),
+    warning: (
+      base: #ba7517,
+      bg: #faeeda,
+    ),
+    success: (
+      base: #3b6d11,
+      bg: #eaf3de,
+    ),
+    danger: (
+      base: #a32d2d,
+      bg: #fdeded,
+    ),
+  ),
+  shadow: (
+    soft: rgba(0, 0, 0, 0.05),   
+    base: rgba(0, 0, 0, 0.1),    
+    strong: rgba(0, 0, 0, 0.2),  
+  ),
+);
+
+$colors-dark: (
+  surface: (
+    bg: #111110,
+    base: #1c1c1a,
+    muted: #2a2a28,
+    border: #474744,
+    border-strong: #5e5e5b,
+  ),
+  text: (
+    primary: #fafaf9,
+    secondary: #acaba7,
+    tertiary: #777773,
+  ),
+  semantic: (
+    accent: (
+      base: #83dbbd, 
+      bg: #003829,   
+    ),
+    warning: (
+      base: #ffb85e,
+      bg: #5c3a0b,
+    ),
+    success: (
+      base: #8dd65c,
+      bg: #1d3608,
+    ),
+    danger: (
+      base: #ffb4ab,
+      bg: #690005,
+    ),
+  ),
+  shadow: (
+    soft: rgba(0, 0, 0, 0.3),   
+    base: rgba(0, 0, 0, 0.5),
+    strong: rgba(0, 0, 0, 0.8),
+  ),
+);
+
+$radius: (
+  sm: 5px,
+  md: 8px,
+  lg: 12px,
+);
+
+@mixin generate-css-variables($map, $prefix: '--color') {
+  @each $key, $value in $map {
+    @if meta.type-of($value) == 'map' {
+      @include generate-css-variables($value, #{$prefix}-#{$key});
+    } @else {
+      #{$prefix}-#{$key}: #{$value};
+    }
+  }
+}
+
+@function color($keys...) {
+  $var-name: '--color';
+  @each $key in $keys {
+    $var-name: '#{$var-name}-#{$key}';
+  }
+  @return var(#{$var-name});
+}
+
+@function padding($size, $type: screen) {
+  $value: map.get($paddings, $type);
+
+  @if $value == null {
+    @error "type `#{$type}` not found in $paddings map.";
+  }
+
+  $padding: map.get($value, $size);
+
+  @if $padding == null {
+    @error "size `#{$size}` not found in #{$type} map.";
+  }
+
+  @return $padding;
+}
+
+@function breakpoint($size) {
+  $value: map.get($breakpoints, $size);
+
+  @if $value == null {
+    @error "size `#{$size}` not found in $breakpoints map.";
+  }
+
+  @return $value;
+}
+
+@function radius($size) {
+  $value: map.get($radius, $size);
+  @if $value == null {
+    @error "size `#{$size}` not found in $radius map.";
+  }
+  @return $value;
+}
