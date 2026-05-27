@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TripStore } from '../../../core/trips/trip.store';
+import { TripStore } from '../../trips/trip.store';
 
 @Component({
   selector: 'app-trip-list',

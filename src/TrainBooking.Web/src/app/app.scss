@@ -1,24 +1,23 @@
-@use "../variables.scss";
+@use '../variables.scss' as variables;
 
 .container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    padding: variables.$screen-padding-sm;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: variables.padding(sm, screen);
 
-    @media (min-width: variables.$screen-md) {
-        padding: variables.$screen-padding-md;
-        // background-color: red;
-    }    
+  @media (min-width: variables.breakpoint(md)) {
+    padding: variables.padding(md, screen);
+    // background-color: red;
+  }
 
-    @media (min-width: variables.$screen-lg) {
-        padding: variables.$screen-padding-lg;
-        // background-color: green;
-    }
+  @media (min-width: variables.breakpoint(lg)) {
+    padding: variables.padding(lg, screen);
+    // background-color: green;
+  }
 
-    @media (min-width: variables.$screen-xl) {
-        padding: variables.$screen-padding-xl;
-        // background-color: blue;
-    }
+  @media (min-width: variables.breakpoint(xl)) {
+    padding: variables.padding(xl, screen);
+    // background-color: blue;
+  }
 }
-
