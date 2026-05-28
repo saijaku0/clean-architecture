@@ -30,7 +30,8 @@
     transition: width 0.3s ease-in-out;
   }
 
-  &:hover {
+  &:hover,
+  &.active-link {
     cursor: pointer;
 
     &::after {

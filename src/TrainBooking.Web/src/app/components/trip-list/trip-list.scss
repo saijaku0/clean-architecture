@@ -1,0 +1,182 @@
+@use '../../../variables.scss' as variable;
+
+.trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    span {
+      font-size: 0.8125rem;
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+}
+
+.status {
+  color: var(--mat-sys-on-surface-variant);
+
+  &.error {
+    color: var(--mat-sys-error);
+  }
+}
+
+.trips {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 16px 20px;
+  box-shadow: 0 0 4px variable.color(shadow, base);
+  border-radius: 12px;
+  background-color: var(--mat-sys-surface);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--mat-sys-outline);
+    box-shadow: 0 2px 8px variable.color(shadow, soft);
+  }
+}
+
+.trip-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trip-times {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  .time {
+    font-size: 1.25rem;
+    font-weight: 500;
+    min-width: 56px;
+  }
+
+  .connector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    max-width: 180px;
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      border: 1.5px solid var(--mat-sys-on-surface-variant);
+    }
+
+    .line {
+      flex: 1;
+      height: 1px;
+      background-color: var(--mat-sys-outline-variant);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+    }
+  }
+}
+
+.trip-stations {
+  display: flex;
+  gap: 14px;
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  .station {
+    min-width: 56px;
+  }
+
+  .meta {
+    flex: 1;
+    max-width: 180px;
+  }
+
+  .end {
+    min-width: 56px;
+    text-align: right;
+  }
+}
+
+.trip-aside {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  .price {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+  }
+
+  .seats {
+    font-size: 0.75rem;
+    color: var(--mat-sys-on-surface-variant);
+
+    &.low {
+      color: var(--mat-sys-error);
+    }
+  }
+
+  .reserve {
+    padding: 6px 14px;
+    border: 1px solid var(--mat-sys-outline);
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    color: var(--mat-sys-on-surface);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
+  }
+}
+
+@media (min-width: variable.breakpoint(md)) {
+  .trip-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .trip-aside {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 130px;
+
+    .price {
+      font-size: 1.375rem;
+    }
+  }
+}

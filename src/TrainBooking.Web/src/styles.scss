@@ -44,7 +44,7 @@ html {
 
   @include mat.system-level-colors($light-theme);
   @include variables.generate-css-variables(variables.$colors-light);
-  background-color: var(--mat-sys-background);
+  background-color: variables.color(surface, bg);
   color: var(--mat-sys-on-background);
 }
 
