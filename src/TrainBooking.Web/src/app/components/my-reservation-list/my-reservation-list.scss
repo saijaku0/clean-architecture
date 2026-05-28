@@ -1,0 +1,269 @@
+@use '../../../variables' as variables;
+
+.my-reservation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-top: 1rem;
+
+  span {
+    font-weight: 300;
+  }
+}
+
+.my-reservation-filter {
+  display: flex;
+  margin: 2rem 0;
+  gap: 0.5rem;
+
+  button {
+    background-color: inherit;
+    padding: .5rem;
+    border: none;
+    font-size: medium;
+    color: variables.color(text, privary);
+
+    &:hover {
+        cursor: pointer;
+
+        transition: ease-in;
+        background-color: variables.color(semantic, accent, bg);
+        border-radius: variables.radius(sm);
+    }
+  }
+}
+
+.sign-in-block {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  h2 {
+    text-align: center;
+  }
+
+  button {
+    font-size: large;
+    background-color: inherit;
+    border: none;
+    color: var(--mat-sys-inverse-surface);
+    font-size: 1.375rem;
+    font-weight: 500;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  @media (min-width: variables.breakpoint(md)) {
+    flex-direction: row;
+
+    button {
+      display: flex;
+      align-items: end;
+    }
+  }
+}
+
+.my-reservation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reservation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 0 4px variables.color(shadow, base);
+  border-radius: variables.radius(lg);
+  background-color: var(--mat-sys-surface);
+}
+
+.reservation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8x;
+
+  &-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 0.875rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    line-height: 0.875rem;
+  }
+
+  &.pending {
+    color: #e5bd7a;
+    background-color: rgba(216, 151, 69, 0.15);
+  }
+
+  &.confirmed {
+    color: #a8d480;
+    background-color: rgba(122, 181, 81, 0.15);
+  }
+}
+
+.reservation-id {
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.reservation-timing {
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  &.urgent {
+    color: #d89745;
+    font-weight: 500;
+  }
+}
+
+.reservation-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  .endpoint {
+    display: flex;
+    flex-direction: column;
+
+    .time {
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    .station {
+      font-size: 0.75rem;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    &.end {
+      text-align: right;
+    }
+  }
+
+  .connector {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      border: 1.5px solid var(--mat-sys-on-surface-variant);
+    }
+
+    .line {
+      flex: 1;
+      height: 1px;
+      background-color: var(--mat-sys-outline-variant);
+    }
+
+    mat-icon {
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+}
+
+.reservation-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.reservation-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  mat-icon {
+    font-size: 0.875rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    line-height: 0.875rem;
+  }
+
+  .price {
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.reservation-actions {
+  display: flex;
+  gap: 6px;
+
+  button {
+    padding: 6px 14px;
+    border-radius: variables.radius(sm);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    border-color: var(--mat-sys-outline);
+    color: var(--mat-sys-on-surface);
+
+    &:hover {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
+  }
+
+  .btn-primary {
+    background-color: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+
+    &:hover {
+      filter: brightness(1.05);
+    }
+  }
+}
+
+@media (min-width: variables.breakpoint(md)) {
+  .reservation-foot {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
