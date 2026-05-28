@@ -3,10 +3,19 @@
 
   <div class="account-block">
     <nav class="navigation-link">
-      <a [routerLink]="['/']" class="navigation-link-trains">
+      <a
+        [routerLink]="['/']"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="navigation-link-trains"
+      >
         <span class="account-name">Trains</span>
       </a>
-      <a [routerLink]="['/my-account']" class="navigation-link-reservations">
+      <a
+        [routerLink]="['/my-account']"
+        routerLinkActive="active-link"
+        class="navigation-link-reservations"
+      >
         <span class="account-name">My Reservations</span>
       </a>
     </nav>
