@@ -78,29 +78,69 @@ internal sealed class SeedRunner(
     {
         logger.LogInformation("Seeding initial data...");
 
-        Train train = dataFactory.CreateTrain(
+        // Физические поезда — переиспользуются между несколькими рейсами
+        Train expressTrain = dataFactory.CreateTrain(
             name: "Express Train",
             wagonCount: 2,
             seatsPerWagon: 4,
             wagonClass: SeatClass.SecondClass);
 
-        Trip trip = dataFactory.CreateTrip(
-            trainId: train.Id,
-            origin: "Kyiv",
-            destination: "Lviv",
-            departure: timeProvider.GetUtcNow().UtcDateTime.AddDays(10),
-            duration: TimeSpan.FromHours(8));
+        Train intercityTrain = dataFactory.CreateTrain(
+            name: "Intercity 125",
+            wagonCount: 4,
+            seatsPerWagon: 6,
+            wagonClass: SeatClass.FirstClass);
 
-        List<TripSeat> tripSeats = dataFactory.CreateTripSeatsForTrain(
-            tripId: trip.Id,
-            train: train,
-            basePrice: 100m);
+        Train nightExpress = dataFactory.CreateTrain(
+            name: "Night Express",
+            wagonCount: 3,
+            seatsPerWagon: 4,
+            wagonClass: SeatClass.SecondClass);
 
-        dbContext.Trains.Add(train);
-        dbContext.Trips.Add(trip);
+        dbContext.Trains.AddRange(expressTrain, intercityTrain, nightExpress);
+
+        // Шаблоны расписания — каждый маршрут ходит раз в день в течение окна сидинга
+        (Train Train, string Origin, string Destination, int Hour, TimeSpan Duration, decimal BasePrice)[] schedule =
+        [
+            (expressTrain,   "Kyiv", "Lviv",    8,  TimeSpan.FromHours(8), 100m),
+        (intercityTrain, "Kyiv", "Odesa",   12, TimeSpan.FromHours(6), 150m),
+        (expressTrain,   "Lviv", "Kyiv",    17, TimeSpan.FromHours(8), 100m),
+        (nightExpress,   "Kyiv", "Kharkiv", 22, TimeSpan.FromHours(7), 80m),
+    ];
+
+        var trips = new List<Trip>();
+        var tripSeats = new List<TripSeat>();
+
+        DateTime startDate = timeProvider.GetUtcNow().UtcDateTime.Date.AddDays(1);
+        const int daysToSeed = 7;
+
+        for (int dayOffset = 0; dayOffset < daysToSeed; dayOffset++)
+        {
+            foreach (var route in schedule)
+            {
+                DateTime departure = startDate.AddDays(dayOffset).AddHours(route.Hour);
+
+                Trip trip = dataFactory.CreateTrip(
+                    trainId: route.Train.Id,
+                    origin: route.Origin,
+                    destination: route.Destination,
+                    departure: departure,
+                    duration: route.Duration);
+
+                trips.Add(trip);
+                tripSeats.AddRange(dataFactory.CreateTripSeatsForTrain(
+                    tripId: trip.Id,
+                    train: route.Train,
+                    basePrice: route.BasePrice));
+            }
+        }
+
+        dbContext.Trips.AddRange(trips);
         dbContext.TripSeats.AddRange(tripSeats);
         await dbContext.SaveChangesAsync(ct);
 
-        logger.LogInformation("Initial data seeding completed.");
+        logger.LogInformation(
+            "Seeded {TripCount} trips across {Days} days, {SeatCount} seats.",
+            trips.Count, daysToSeed, tripSeats.Count);
     }
 }
