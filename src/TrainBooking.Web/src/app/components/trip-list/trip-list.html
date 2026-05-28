@@ -1,7 +1,7 @@
 <div class="trip-list">
   <div class="trip-list-header">
     <h2>Available trips</h2>
-    <span>{{ tripStore.filteredTrips().length }} trains</span>
+    <span>{{ tripStore.totalCount() }} trains</span>
   </div>
 
   @if (tripStore.loading()) {
@@ -42,6 +42,18 @@
           </div>
         </div>
       }
+    </div>
+  }
+
+  @if (tripStore.totalCount() > 0) {
+    <div class="paginator-wrapper">
+      <mat-paginator
+        [length]="tripStore.totalCount()"
+        [pageSize]="tripStore.pageSize()"
+        [pageIndex]="tripStore.pageIndex()"
+        (page)="onPageChange($event)"
+      >
+      </mat-paginator>
     </div>
   }
 </div>

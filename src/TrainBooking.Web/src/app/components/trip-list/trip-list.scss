@@ -21,6 +21,12 @@
       color: var(--mat-sys-on-surface-variant);
     }
   }
+
+  .paginator-wrapper {
+    background-color: var(--mat-sys-surface-container);
+    border-radius: 16px;
+    overflow: hidden;
+  }
 }
 
 .status {
@@ -44,7 +50,7 @@
 
   padding: 16px 20px;
   box-shadow: 0 0 4px variable.color(shadow, base);
-  border-radius: 12px;
+  border-radius: variable.radius(lg);
   background-color: var(--mat-sys-surface);
   transition:
     border-color 0.15s ease,
@@ -64,13 +70,13 @@
 
 .trip-times {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 14px;
 
   .time {
     font-size: 1.25rem;
     font-weight: 500;
-    min-width: 56px;
   }
 
   .connector {
@@ -78,7 +84,6 @@
     align-items: center;
     gap: 6px;
     flex: 1;
-    max-width: 180px;
 
     .dot {
       width: 6px;
@@ -104,6 +109,7 @@
 
 .trip-stations {
   display: flex;
+  justify-content: space-between;
   gap: 14px;
   font-size: 0.8125rem;
   color: var(--mat-sys-on-surface-variant);

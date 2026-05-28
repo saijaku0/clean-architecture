@@ -10,19 +10,27 @@ export class TripStore {
   private readonly loadingSignal = signal(false);
   private readonly errorSignal = signal<string | null>(null);
 
-  readonly trips = this.tripsSignal.asReadonly();
-  readonly loading = this.loadingSignal.asReadonly();
-  readonly error = this.errorSignal.asReadonly();
+  private readonly totalCountSignal = signal(0);
+  private readonly pageIndexSignal = signal(0);
+  private readonly pageSizeSignal = signal(20);
 
   private readonly _filters = signal<TripFilters>({
     origin: '',
     destination: '',
     date: null,
   });
+
+  readonly trips = this.tripsSignal.asReadonly();
+  readonly loading = this.loadingSignal.asReadonly();
+  readonly error = this.errorSignal.asReadonly();
   readonly filters = this._filters.asReadonly();
 
+  readonly totalCount = this.totalCountSignal.asReadonly();
+  readonly pageIndex = this.pageIndexSignal.asReadonly();
+  readonly pageSize = this.pageSizeSignal.asReadonly();
+
   readonly filteredTrips = computed(() => {
-    const trips = this.trips(); // твой существующий публичный сигнал
+    const trips = this.trips();
     const { origin, destination, date } = this._filters();
 
     const o = origin.trim().toLowerCase();
@@ -38,9 +46,17 @@ export class TripStore {
 
   loadTrips() {
     this.loadingSignal.set(true);
-    this.tripService.getTrips().subscribe({
+
+    const { origin, destination, date } = this._filters();
+    const pageNumber = this.pageIndexSignal() + 1;
+    const pageSize = this.pageSizeSignal();
+
+    const dateString = date ? new Date(date).toISOString() : undefined;
+
+    this.tripService.getTrips(pageNumber, pageSize, origin, destination, dateString).subscribe({
       next: (result) => {
         this.tripsSignal.set(result.items);
+        this.totalCountSignal.set(result.totalCount);
         this.loadingSignal.set(false);
       },
       error: (err) => {
@@ -53,10 +69,14 @@ export class TripStore {
 
   setFilters(partial: Partial<TripFilters>): void {
     this._filters.update((f) => ({ ...f, ...partial }));
+    this.pageIndexSignal.set(0);
+    this.loadTrips();
   }
 
-  clearFilters(): void {
-    this._filters.set({ origin: '', destination: '', date: null });
+  setPagination(pageIndex: number, pageSize: number): void {
+    this.pageIndexSignal.set(pageIndex);
+    this.pageSizeSignal.set(pageSize);
+    this.loadTrips();
   }
 
   private isSameDay(value: string | Date, target: Date): boolean {
