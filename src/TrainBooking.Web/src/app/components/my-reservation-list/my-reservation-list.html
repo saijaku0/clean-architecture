@@ -1,0 +1,71 @@
+@if (auth.isAuthenticated$ | async) {
+  @if (auth.user$ | async; as user) {
+    <header class="my-reservation-header">
+      <h2>My Reservation</h2>
+      <span>3 active · 5 past</span>
+    </header>
+    <section class="my-reservation-filter">
+      <button matButton="elevated">Basic</button>
+      <button matButton="elevated">Past</button>
+      <button matButton="elevated">Cancelled</button>
+    </section>
+    <section class="my-reservation-list">
+      @for (r of reservations; track r.id) {
+        <article class="reservation-card">
+          <div class="reservation-head">
+            <div class="reservation-head-left">
+              <span
+                class="status-pill"
+                [class.pending]="r.status === 'pending'"
+                [class.confirmed]="r.status === 'confirmed'"
+              >
+                <mat-icon>{{ r.status === 'pending' ? 'schedule' : 'check' }}</mat-icon>
+                {{ r.statusLabel }}
+              </span>
+              <span class="reservation-id">#{{ r.id }}</span>
+            </div>
+            <span class="reservation-timing" [class.urgent]="r.urgent">{{ r.timing }}</span>
+          </div>
+
+          <div class="reservation-body">
+            <div class="endpoint">
+              <span class="time">{{ r.departureTime }}</span>
+              <span class="station">{{ r.originStation }}</span>
+            </div>
+            <span class="connector">
+              <span class="dot"></span>
+              <span class="line"></span>
+              <mat-icon>arrow_right_alt</mat-icon>
+            </span>
+            <div class="endpoint end">
+              <span class="time">{{ r.arrivalTime }}</span>
+              <span class="station">{{ r.destinationStation }}</span>
+            </div>
+          </div>
+
+          <div class="reservation-foot">
+            <div class="reservation-info">
+              <span><mat-icon>train</mat-icon>{{ r.trainInfo }}</span>
+              <span><mat-icon>event_seat</mat-icon>Seats {{ r.seats }}</span>
+              <span class="price">€{{ r.price }}</span>
+            </div>
+            <div class="reservation-actions">
+              @if (r.status === 'pending') {
+                <button class="btn-secondary">Cancel</button>
+                <button class="btn-primary">Pay</button>
+              } @else {
+                <button class="btn-secondary">Details</button>
+                <button class="btn-secondary">Cancel</button>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </section>
+  }
+} @else {
+  <div class="sign-in-block">
+    <h2>To continue please</h2>
+    <button (click)="login()">Sign in</button>
+  </div>
+}
