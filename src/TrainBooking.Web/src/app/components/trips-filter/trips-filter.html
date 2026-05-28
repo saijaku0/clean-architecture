@@ -1,0 +1,26 @@
+<form [formGroup]="form" class="search-bar" (ngSubmit)="search()">
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>From</mat-label>
+    <mat-icon matIconPrefix>location_on</mat-icon>
+    <input matInput type="text" name="from-station" formControlName="origin" placeholder="Origin" />
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>To</mat-label>
+    <mat-icon matIconPrefix>east</mat-icon>
+    <input matInput type="text" name="to-destination" formControlName="destination" placeholder="Destination" />
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Choose a date</mat-label>
+    <input matInput [matDatepicker]="picker" formControlName="date" />
+    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+
+  <button matFab extended type="submit">
+    <mat-icon>search</mat-icon>
+    Search
+  </button>
+
+</form>

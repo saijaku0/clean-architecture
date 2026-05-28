@@ -16,3 +16,9 @@ export interface TripListItemDto {
     availableSeatsCount: number;
     minPrice: number;
 }
+
+export interface TripFilters {
+  origin: string;
+  destination: string;
+  date: Date | null;
+}

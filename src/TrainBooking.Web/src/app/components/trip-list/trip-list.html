@@ -1,32 +1,47 @@
-<div class="trip-list-container">
-    <h1>Available Trips</h1>
+<div class="trip-list">
+  <div class="trip-list-header">
+    <h2>Available trips</h2>
+    <span>{{ tripStore.filteredTrips().length }} trains</span>
+  </div>
 
-    @if (tripStore.loading()) {
-      <p>Loading trips...</p>
-    } @else if (tripStore.error()) {
-      <p class="error">{{ tripStore.error() }}</p>
-    } @else if (tripStore.trips().length === 0) {
-      <p>No trips available.</p>
-    } @else {
-      <div class="trips">
-        @for (trip of tripStore.trips(); track trip.tripId) {
-          <div class="trip-card">
-            <div class="route">
+  @if (tripStore.loading()) {
+    <p class="status">Loading trips…</p>
+  } @else if (tripStore.error()) {
+    <p class="status error">{{ tripStore.error() }}</p>
+  } @else if (tripStore.trips().length === 0) {
+    <p class="status">No trips available.</p>
+  } @else if (tripStore.filteredTrips().length === 0) {
+    <p class="status">No trips match your search.</p>
+  } @else {
+    <div class="trips">
+      @for (trip of tripStore.filteredTrips(); track trip.tripId) {
+        <div class="trip-card">
+          <div class="trip-main">
+            <div class="trip-times">
+              <span class="time">{{ trip.departureTime | date: 'shortTime' }}</span>
+              <span class="connector">
+                <span class="dot"></span>
+                <span class="line"></span>
+                <mat-icon>arrow_right_alt</mat-icon>
+              </span>
+              <span class="time">{{ trip.arrivalTime | date: 'shortTime' }}</span>
+            </div>
+            <div class="trip-stations">
               <span class="station">{{ trip.originStation }}</span>
-              <span class="arrow">→</span>
-              <span class="station">{{ trip.destinationStation }}</span>
-            </div>
-            <div class="times">
-              <span>{{ trip.departureTime | date: 'shortTime' }}</span>
-              <span>—</span>
-              <span>{{ trip.arrivalTime | date: 'shortTime' }}</span>
-            </div>
-            <div class="info">
-              <span>{{ trip.availableSeatsCount }} seats available</span>
-              <span class="price">from {{ trip.minPrice }} USD</span>
+              <span class="meta"></span>
+              <span class="station end">{{ trip.destinationStation }}</span>
             </div>
           </div>
-        }
-      </div>
-    }
-  </div>
+
+          <div class="trip-aside">
+            <span class="price">from {{ trip.minPrice }} USD</span>
+            <span class="seats" [class.low]="trip.availableSeatsCount <= 5">
+              {{ trip.availableSeatsCount }} seats left
+            </span>
+            <a class="reserve" [routerLink]="['/trips', trip.tripId]">Reserve</a>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

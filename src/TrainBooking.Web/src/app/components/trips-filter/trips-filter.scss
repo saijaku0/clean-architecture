@@ -1,0 +1,140 @@
+@use '../../../variables.scss' as variable;
+
+.search-bar {
+  display: grid;
+
+  background-color: variable.color(surface, muted);
+  border-radius: variable.radius(lg);
+  padding: 1rem;
+
+  mat-form-field {
+    &:not(:first-child):not(:last-child) {
+      ::ng-deep .mdc-text-field {
+        border-radius: 0;
+      }
+    }
+
+    &:last-child {
+      ::ng-deep .mdc-text-field {
+        border-radius: 0;
+      }
+    }
+  }
+
+  button {
+    margin: 1rem 0;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+
+    font-weight: 600;
+    font-size: medium;
+
+    background-color: variable.color(semantic, accent, base);
+    border-radius: var(--mat-form-field-filled-container-shape, var(--mat-sys-corner-extra-small));
+
+    cursor: pointer;
+  }
+}
+
+@media (min-width: variable.breakpoint(sm)) {
+  .search-bar {
+    grid-template-columns: 1fr 1fr 1fr auto;
+    padding: 2rem;
+
+    mat-form-field {
+      &:first-child {
+        ::ng-deep .mdc-text-field {
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 0;
+        }
+      }
+
+      &:not(:first-child):not(:last-child) {
+        ::ng-deep .mdc-text-field {
+          border-radius: 0;
+        }
+      }
+
+      &:last-child {
+        ::ng-deep .mdc-text-field {
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+          border-top-right-radius: var(
+            --mat-form-field-filled-container-shape,
+            var(--mat-sys-corner-extra-small)
+          );
+        }
+      }
+    }
+
+    button {
+      margin: 0 1rem;
+    }
+  }
+}
+
+/*
+.search-bar {
+      background: var(--surface-muted);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .field input {
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--surface);
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+    }
+    .field input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--shadow-focus);
+    }
+ 
+    button.primary, button.secondary {
+      font-family: inherit;
+      height: 36px;
+      padding: 0 16px;
+      font-size: 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    button.primary {
+      background: var(--accent);
+      color: var(--on-accent);
+      border: 0.5px solid var(--accent);
+      font-weight: 500;
+    }
+    button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    button.primary:disabled { background: var(--border-strong); border-color: var(--border-strong); color: var(--text-tertiary); cursor: not-allowed; }
+    button.secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 0.5px solid var(--border-strong);
+    }
+    button.secondary:hover { background: var(--surface-muted); }
+    button.small { height: 30px; padding: 0 12px; font-size: 13px; }
+*/
