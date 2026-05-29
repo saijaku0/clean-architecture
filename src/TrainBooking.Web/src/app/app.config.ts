@@ -5,21 +5,21 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { DatePipe } from '@angular/common';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    DatePipe,
     provideNativeDateAdapter(),
     provideRouter(routes),
-    provideHttpClient(
-      withInterceptors([authHttpInterceptorFn])
-    ),
+    provideHttpClient(withInterceptors([authHttpInterceptorFn])),
     provideAuth0({
       domain: 'demian-trainbooking.eu.auth0.com',
       clientId: 'EQIyCDwCzhzRcqrMPZVyh1f7I76bnseh',
       authorizationParams: {
         redirect_uri: window.location.origin,
-        audience: 'https://api.trainbooking.app'
+        audience: 'https://api.trainbooking.app',
       },
       httpInterceptor: {
         allowedList: [
@@ -27,12 +27,20 @@ export const appConfig: ApplicationConfig = {
             uri: 'https://api.trainbooking.app/*',
             tokenOptions: {
               authorizationParams: {
-                audience: 'https://api.trainbooking.app'
-              }
-            }
-          }
-        ]
-      }
-    })
-  ]
+                audience: 'https://api.trainbooking.app',
+              },
+            },
+          },
+          {
+            uri: 'http://localhost:5000/api/v1/reservations/*',
+            tokenOptions: {
+              authorizationParams: {
+                audience: 'https://api.trainbooking.app',
+              },
+            },
+          },
+        ],
+      },
+    }),
+  ],
 };

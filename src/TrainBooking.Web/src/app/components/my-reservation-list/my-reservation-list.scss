@@ -16,22 +16,26 @@
   display: flex;
   margin: 2rem 0;
   gap: 0.5rem;
+}
 
-  button {
-    background-color: inherit;
-    padding: .5rem;
-    border: none;
-    font-size: medium;
-    color: variables.color(text, privary);
+.custom-filter-btn {
+  background-color: inherit;
+  padding: 0.5rem;
+  border: none;
+  font-size: medium;
+  color: variables.color(text, privary);
+  border-radius: variables.radius(sm);
+}
 
-    &:hover {
-        cursor: pointer;
+.custom-filter-btn.active {
+  background-color: variables.color(semantic, accent, base) !important;
+}
 
-        transition: ease-in;
-        background-color: variables.color(semantic, accent, bg);
-        border-radius: variables.radius(sm);
-    }
-  }
+.custom-filter-btn:not(.active):hover {
+  cursor: pointer;
+
+  transition: ease-in;
+  background-color: variables.color(semantic, accent, bg);
 }
 
 .sign-in-block {
@@ -116,13 +120,17 @@
   }
 
   &.pending {
-    color: #e5bd7a;
-    background-color: rgba(216, 151, 69, 0.15);
+    background-color: variables.color(semantic, warning, bg);
+    color: variables.color(semantic, warning, base);
   }
 
   &.confirmed {
-    color: #a8d480;
-    background-color: rgba(122, 181, 81, 0.15);
+    background-color: variables.color(semantic, success, bg);
+    color: variables.color(semantic, success, base);
+  }
+  &.expired {
+    background-color: variables.color(semantic, danger, bg);
+    color: variables.color(semantic, danger, base);
   }
 }
 

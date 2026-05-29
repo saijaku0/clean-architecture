@@ -4,6 +4,7 @@ using TrainBooking.Application.Reservations.Queries.GetMyReservations;
 using TrainBooking.Application.Reservations.Queries.GetReservationById;
 using TrainBooking.Domain.Reservations;
 using TrainBooking.Domain.Reservations.Enums;
+using TrainBooking.Domain.Trains;
 using TrainBooking.Domain.Trips;
 
 namespace TrainBooking.Infrastructure.Persistence.Repositories;
@@ -36,16 +37,33 @@ internal sealed class ReservationRepository(AppDbContext dbContext) : IReservati
 
     public async Task<IReadOnlyCollection<ReservationListDto>> GetUserReservationsAsync(
         Guid userId,
-        CancellationToken ct = default) =>
-            await dbContext.Reservations
-                .Where(r => r.UserId == userId)
-                .Select(r => new ReservationListDto(
-                    r.Id,
-                    r.TripId,
-                    r.TotalPrice,
-                    r.Status.ToString(),
-                    r.CreatedAt))
-                .ToListAsync(ct);
+        CancellationToken ct = default)
+    {
+        IQueryable<ReservationListDto> query = from r in dbContext.Reservations
+                                               where r.UserId == userId
+                                               join t in dbContext.Trips on r.TripId equals t.Id
+                                               join train in dbContext.Trains on t.TrainId equals train.Id
+                                               orderby r.CreatedAt descending
+                                               select new ReservationListDto(
+                                                   r.Id,
+                                                   r.Status.ToString(),
+                                                   r.ExpiresAt,
+                                                   r.CreatedAt,
+                                                   r.TripId,
+                                                   train.Name,
+                                                   t.OriginStation,
+                                                   t.DestinationStation,
+                                                   t.DepartureTime,
+                                                   t.DepartureTime,
+                                                   (from rs in r.ReservationSeats
+                                                    join ts in dbContext.TripSeats on rs.TripSeatId equals ts.Id
+                                                    join s in dbContext.Set<Seat>() on ts.SeatId equals s.Id
+                                                    join w in dbContext.Set<Wagon>() on s.WagonId equals w.Id
+                                                    select $"{w.Number}-{s.Number}").ToList(),
+                                                   r.TotalPrice);
+        return await query.ToListAsync(ct);
+    }
+
     public async Task<ReservationDetailsDto?> GetReservationDetailsAsync(
         Guid reservationId,
         Guid userId,

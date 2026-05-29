@@ -116,7 +116,7 @@ internal sealed class SeedRunner(
 
         for (int dayOffset = 0; dayOffset < daysToSeed; dayOffset++)
         {
-            foreach (var route in schedule)
+            foreach ((Train Train, string Origin, string Destination, int Hour, TimeSpan Duration, decimal BasePrice) route in schedule)
             {
                 DateTime departure = startDate.AddDays(dayOffset).AddHours(route.Hour);
 
