@@ -2,15 +2,43 @@
   @if (auth.user$ | async; as user) {
     <header class="my-reservation-header">
       <h2>My Reservation</h2>
-      <span>3 active · 5 past</span>
+      <span>{{ reservationStore.filteredReservations().length }}: total</span>
     </header>
     <section class="my-reservation-filter">
-      <button matButton="elevated">Basic</button>
-      <button matButton="elevated">Past</button>
-      <button matButton="elevated">Cancelled</button>
+      <button
+        class="custom-filter-btn"
+        [class.active]="reservationStore.currentFilter() === 'basic'"
+        (click)="reservationStore.setFilter('basic')"
+      >
+        Basic
+      </button>
+
+      <button
+        class="custom-filter-btn"
+        [class.active]="reservationStore.currentFilter() === 'past'"
+        (click)="reservationStore.setFilter('past')"
+      >
+        Past
+      </button>
+
+      <button
+        class="custom-filter-btn"
+        [class.active]="reservationStore.currentFilter() === 'cancelled'"
+        (click)="reservationStore.setFilter('cancelled')"
+      >
+        Cancelled
+      </button>
+
+      <button
+        class="custom-filter-btn"
+        [class.active]="reservationStore.currentFilter() === 'expired'"
+        (click)="reservationStore.setFilter('expired')"
+      >
+        Expired
+      </button>
     </section>
     <section class="my-reservation-list">
-      @for (r of reservations; track r.id) {
+      @for (r of reservationStore.filteredReservations(); track r.id) {
         <article class="reservation-card">
           <div class="reservation-head">
             <div class="reservation-head-left">
@@ -18,8 +46,27 @@
                 class="status-pill"
                 [class.pending]="r.status === 'pending'"
                 [class.confirmed]="r.status === 'confirmed'"
+                [class.expired]="r.status === 'expired'"
               >
-                <mat-icon>{{ r.status === 'pending' ? 'schedule' : 'check' }}</mat-icon>
+                <mat-icon>
+                  @switch (r.status) {
+                    @case ('pending') {
+                      schedule
+                    }
+                    @case ('confirmed') {
+                      check_circle
+                    }
+                    @case ('expired') {
+                      hourglass_disabled
+                    }
+                    @case ('cancelled') {
+                      cancel
+                    }
+                    @default {
+                      info
+                    }
+                  }
+                </mat-icon>
                 {{ r.statusLabel }}
               </span>
               <span class="reservation-id">#{{ r.id }}</span>
@@ -53,6 +100,8 @@
               @if (r.status === 'pending') {
                 <button class="btn-secondary">Cancel</button>
                 <button class="btn-primary">Pay</button>
+              } @else if (r.status === 'expired') {
+                <button class="btn-secondary">Details</button>
               } @else {
                 <button class="btn-secondary">Details</button>
                 <button class="btn-secondary">Cancel</button>
@@ -60,6 +109,10 @@
             </div>
           </div>
         </article>
+      } @empty {
+        <div class="empty-state">
+          <p>No reservations found for this category.</p>
+        </div>
       }
     </section>
   }
